@@ -13,7 +13,7 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--fg);
     font:15.5px/1.65 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-  .wrap{max-width:900px;margin:0 auto;padding:32px 16px 64px}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 16px 64px}
   header.cover{border-bottom:3px solid var(--accent);padding-bottom:20px;margin-bottom:28px}
   header.cover .tag{color:var(--accent);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:13px}
   h1{font-size:30px;line-height:1.25;margin:6px 0 8px}
@@ -21,7 +21,7 @@
   h2{font-size:22px;margin:40px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
   h3{font-size:17px;margin:24px 0 8px}
   table{width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:14.5px}
-  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
   th{background:var(--soft)}
   code{font-family:"JetBrains Mono",Consolas,monospace;font-size:13px;background:var(--code-bg);
     padding:1px 5px;border-radius:4px}
@@ -32,6 +32,7 @@
   .note{border-color:var(--accent);background:#eef3ff}
   .warn{border-color:var(--err);background:#fdf0ee}
   .tip{border-color:var(--ok);background:#ecf8f1}
+  .note ul,.warn ul,.tip ul{margin:6px 0;padding-left:20px}
   .toc{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px 22px}
   .toc ol{margin:6px 0;padding-left:20px;columns:2;column-gap:32px}
   .toc a{color:var(--accent);text-decoration:none}
@@ -43,20 +44,24 @@
     min-width:130px;background:#fff;font-size:14px}
   .flow .box b{display:block}
   .flow .arrow{color:var(--muted);font-size:22px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#fff}
+  .card h4{margin:0 0 4px;font-size:15px}
+  .card p{margin:0;font-size:14px;color:var(--muted)}
   ol.steps li,ul li{margin:4px 0}
   .printbtn{position:fixed;right:16px;bottom:16px;background:var(--accent);color:#fff;border:none;
     border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-  .pill{display:inline-block;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600}
-  .pill.ok{background:#d8f2e3;color:var(--ok)} .pill.opt{background:#fff1dc;color:var(--warn)}
+  .pill{display:inline-block;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .pill.ok{background:#d8f2e3;color:var(--ok)} .pill.no{background:#eceef2;color:var(--muted)}
   footer{margin-top:48px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:12px}
-  @media (max-width:640px){ .toc ol{columns:1} h1{font-size:24px} }
+  @media (max-width:640px){ .toc ol{columns:1} h1{font-size:24px} .grid2{grid-template-columns:1fr} }
   @media print{
     .printbtn{display:none}
-    body{font-size:12pt}
+    body{font-size:11.5pt}
     .wrap{max-width:none;padding:0}
-    h2{break-after:avoid;page-break-after:avoid}
-    table,figure,pre,.note,.warn,.tip{break-inside:avoid}
-    pre.full{break-inside:auto;white-space:pre-wrap;word-break:break-word}
+    h2,h3{break-after:avoid;page-break-after:avoid}
+    tr,figure,.note,.warn,.tip,.card{break-inside:avoid}
+    pre{white-space:pre-wrap;word-break:break-word}
     a{color:inherit;text-decoration:none}
     #appendix{break-before:page}
   }
@@ -70,7 +75,7 @@
 <header class="cover">
   <div class="tag">Đề tài IoT · ESP32</div>
   <h1>Khóa cửa thông minh kết hợp nhập mật khẩu (PIN Code) trên Web</h1>
-  <p>Hướng dẫn đầy đủ: chuẩn bị linh kiện, cách nối dây, cài đặt, nạp code, giải thích mã nguồn, bảo mật, kiểm thử và hướng phát triển.</p>
+  <p>Hướng dẫn đầy đủ từ A đến Z, dùng đúng bộ kit ESP32 Starter: linh kiện, nối dây, cài đặt, nạp code, giải thích mã nguồn, bảo mật, kiểm thử và hướng phát triển.</p>
 </header>
 
 <nav class="toc">
@@ -78,8 +83,9 @@
   <ol>
     <li><a href="#gioi-thieu">Giới thiệu đề tài</a></li>
     <li><a href="#nguyen-ly">Nguyên lý hoạt động</a></li>
-    <li><a href="#linh-kien">Chuẩn bị linh kiện</a></li>
+    <li><a href="#linh-kien">Linh kiện sử dụng</a></li>
     <li><a href="#noi-day">Sơ đồ nối dây</a></li>
+    <li><a href="#lap-rap">Lắp ráp từng bước</a></li>
     <li><a href="#phan-mem">Cài đặt phần mềm</a></li>
     <li><a href="#nap-code">Nạp code vào ESP32</a></li>
     <li><a href="#su-dung">Hướng dẫn sử dụng</a></li>
@@ -94,12 +100,13 @@
 
 <!-- 1 -->
 <h2 id="gioi-thieu">1. Giới thiệu đề tài</h2>
-<p>Hệ thống dùng vi điều khiển <b>ESP32</b> làm Web Server. ESP32 tự phát WiFi riêng. Người dùng kết nối điện thoại vào WiFi này, mở trình duyệt và thấy giao diện <b>bàn phím số (Keypad)</b>. Khi nhập đúng mã PIN, ESP32 điều khiển <b>Servo</b> (hoặc <b>Relay</b> nối khóa chốt điện) để mở khóa và bật <b>LED xanh</b>. Khi nhập sai, <b>LED đỏ</b> nhấp nháy để cảnh báo.</p>
+<p>Hệ thống dùng vi điều khiển <b>ESP32</b> làm Web Server. ESP32 tự phát WiFi riêng. Người dùng kết nối điện thoại vào WiFi này và mở trình duyệt để thấy giao diện <b>bàn phím số</b>. Khi nhập đúng mã PIN, ESP32 kích <b>Relay</b> (đóng vai trò chốt khóa điện) để mở khóa và bật <b>LED xanh</b>. Khi nhập sai, <b>LED đỏ</b> nháy và còi kêu. Nếu nhập sai nhiều lần hoặc cửa bị mở khi đang khóa, hệ thống <b>báo động</b>.</p>
+<p>Ngoài phần bắt buộc của đề bài, hệ thống tận dụng thêm các linh kiện có sẵn trong bộ kit: <b>màn hình OLED</b> hiển thị trạng thái, <b>cảm biến PIR</b> phát hiện người đến gần cửa, <b>cảm biến hồng ngoại</b> làm cảm biến cửa đóng/mở, và <b>2 nút nhấn</b> đặt phía trong nhà.</p>
 <h3>Mục tiêu</h3>
 <ul>
-  <li>Xây dựng Web Server trên ESP32, có giao diện keypad thân thiện với điện thoại.</li>
-  <li>Điều khiển cơ cấu chấp hành (Servo/Relay) và đèn báo trạng thái (LED xanh/đỏ).</li>
-  <li>Áp dụng <b>bảo mật</b>: kiểm tra dữ liệu đầu vào, so sánh chuỗi an toàn, chống dò mật khẩu, tự động khóa lại.</li>
+  <li>Xây dựng Web Server trên ESP32 với giao diện keypad dùng trên điện thoại, hiển thị trạng thái theo thời gian thực.</li>
+  <li>Điều khiển cơ cấu chấp hành (Relay) và các thiết bị báo hiệu (LED xanh/vàng/đỏ, OLED, còi).</li>
+  <li>Áp dụng <b>bảo mật</b>: kiểm tra dữ liệu đầu vào, so sánh chuỗi an toàn, chống dò mật khẩu, báo động đột nhập, ghi nhật ký.</li>
   <li>Cho phép đổi PIN và lưu PIN vào bộ nhớ flash, mất điện không mất.</li>
 </ul>
 
@@ -107,385 +114,582 @@
 <h2 id="nguyen-ly">2. Nguyên lý hoạt động</h2>
 <div class="flow">
   <div class="box"><b>📱 Điện thoại</b>Trình duyệt web</div>
+  <div class="arrow">⇄</div>
+  <div class="box"><b>📶 WiFi AP</b>SmartLock-ESP32</div>
+  <div class="arrow">⇄</div>
+  <div class="box"><b>🧠 ESP32</b>Web Server<br>kiểm tra PIN</div>
   <div class="arrow">→</div>
-  <div class="box"><b>📶 WiFi (AP)</b>SmartLock-ESP32</div>
-  <div class="arrow">→</div>
-  <div class="box"><b>🧠 ESP32</b>Web Server + kiểm tra PIN</div>
-  <div class="arrow">→</div>
-  <div class="box"><b>⚙️ Servo / Relay</b>Mở / đóng chốt</div>
-  <div class="arrow">+</div>
-  <div class="box"><b>💡 LED + Còi</b>Báo trạng thái</div>
+  <div class="box"><b>🔌 Relay CH1</b>Chốt khóa</div>
+  <div class="box"><b>🚨 Relay CH2</b>Còi báo động</div>
+  <div class="box"><b>💡 LED · 📟 OLED · 🔔 Còi</b>Báo trạng thái</div>
 </div>
-<ol class="steps">
-  <li>ESP32 khởi động, đọc PIN đã lưu trong flash (lần đầu dùng PIN mặc định <code>1234</code>), đưa khóa về trạng thái <b>KHÓA</b> (LED đỏ sáng) và phát WiFi.</li>
-  <li>Điện thoại truy cập <code>http://192.168.4.1</code>, nhận về trang HTML có bàn phím số.</li>
-  <li>Người dùng nhập PIN rồi bấm OK. Trình duyệt gửi yêu cầu <code>POST /unlock</code> kèm PIN.</li>
-  <li>ESP32 kiểm tra định dạng PIN, sau đó so sánh với PIN đã lưu:
-    <ul>
-      <li><b>Đúng</b>: servo quay 90°, relay đóng, LED xanh sáng, còi kêu bíp. Sau <b>5 giây</b> tự động khóa lại.</li>
-      <li><b>Sai</b>: LED đỏ nháy 3 lần và tăng bộ đếm. Sai <b>3 lần</b> thì khóa tạm <b>30 giây</b>.</li>
-    </ul>
-  </li>
-  <li>Trang web hỏi <code>GET /status</code> mỗi giây để cập nhật trạng thái hiển thị.</li>
-</ol>
+<div class="flow">
+  <div class="box"><b>🚶 PIR</b>Có người trước cửa</div>
+  <div class="box"><b>🚪 Cảm biến IR</b>Cửa đóng / mở</div>
+  <div class="box"><b>🔘 Nút EXIT / LOCK</b>Phía trong nhà</div>
+  <div class="arrow">→</div>
+  <div class="box"><b>🧠 ESP32</b>Đầu vào</div>
+</div>
+
+<h3>Các tình huống hoạt động</h3>
+<table>
+  <tr><th>Tình huống</th><th>Hệ thống phản ứng</th></tr>
+  <tr><td>Khởi động</td><td>Đọc PIN từ flash (mặc định <code>1234</code>). Khóa cửa: relay 1 ngắt, LED đỏ sáng. Phát WiFi, OLED hiện <code>LOCKED</code> và địa chỉ IP.</td></tr>
+  <tr><td>Có người đến gần (PIR)</td><td>OLED bật sáng và hiện "Moi nhap ma PIN...", LED vàng sáng, ghi vào nhật ký.</td></tr>
+  <tr><td>Nhập <b>đúng</b> PIN trên web</td><td>Relay 1 đóng (mở khóa), LED xanh sáng, còi thụ động phát giai điệu "đúng", OLED hiện <code>OPEN</code>.</td></tr>
+  <tr><td>Nhập <b>sai</b> PIN</td><td>LED đỏ nháy, còi kêu "tè tè", OLED hiện "Sai PIN! 1/3".</td></tr>
+  <tr><td>Sai PIN <b>3 lần</b></td><td>Tạm khóa 30 giây, không nhận PIN kể cả PIN đúng. Relay 2 bật còi báo động trong 15 giây, LED vàng nháy nhanh, OLED hiện <code>! ALARM !</code>.</td></tr>
+  <tr><td>Tự khóa lại</td><td>Sau khi mở 5 giây <b>và</b> cửa đã đóng (cảm biến IR thấy cánh cửa) thì tự khóa lại.</td></tr>
+  <tr><td>Cửa bị mở khi đang khóa</td><td>Phát hiện <b>đột nhập</b>: bật còi báo động và ghi nhật ký.</td></tr>
+  <tr><td>Bấm nút <b>EXIT</b> (trong nhà)</td><td>Mở khóa để đi ra, không cần PIN.</td></tr>
+  <tr><td>Bấm nút <b>LOCK</b> (trong nhà)</td><td>Khóa ngay và <b>tắt báo động</b>.</td></tr>
+</table>
 
 <!-- 3 -->
-<h2 id="linh-kien">3. Chuẩn bị linh kiện</h2>
+<h2 id="linh-kien">3. Linh kiện sử dụng</h2>
+<p>Toàn bộ linh kiện đều lấy từ bộ kit có sẵn, <b>không cần mua thêm</b> (trừ khi thiếu dây, xem mục 4.4).</p>
 <table>
-  <tr><th>#</th><th>Linh kiện</th><th>SL</th><th>Vai trò / ghi chú</th></tr>
-  <tr><td>1</td><td>ESP32 DevKit V1 (30 hoặc 38 chân) <span class="pill ok">bắt buộc</span></td><td>1</td><td>Bộ xử lý trung tâm, có sẵn WiFi</td></tr>
-  <tr><td>2</td><td>Cáp micro-USB / Type-C <b>loại truyền dữ liệu</b> <span class="pill ok">bắt buộc</span></td><td>1</td><td>Cấp nguồn và nạp code. Cáp chỉ dùng để sạc thì máy tính không nhận board</td></tr>
-  <tr><td>3</td><td>Servo SG90 <span class="pill ok">bắt buộc</span></td><td>1</td><td>Mô phỏng chốt khóa (0° = khóa, 90° = mở)</td></tr>
-  <tr><td>4</td><td>LED xanh lá 5mm <span class="pill ok">bắt buộc</span></td><td>1</td><td>Báo mở khóa thành công</td></tr>
-  <tr><td>5</td><td>LED đỏ 5mm <span class="pill ok">bắt buộc</span></td><td>1</td><td>Báo đang khóa / nhập sai</td></tr>
-  <tr><td>6</td><td>Điện trở 220Ω (hoặc 330Ω) <span class="pill ok">bắt buộc</span></td><td>2</td><td>Hạn dòng cho LED, mỗi LED một con</td></tr>
-  <tr><td>7</td><td>Breadboard 830 lỗ <span class="pill ok">bắt buộc</span></td><td>1–2</td><td>Cắm mạch không cần hàn</td></tr>
-  <tr><td>8</td><td>Dây jumper đực-đực, đực-cái <span class="pill ok">bắt buộc</span></td><td>~20</td><td>Nối dây</td></tr>
-  <tr><td>9</td><td>Buzzer active 5V <span class="pill opt">tùy chọn</span></td><td>1</td><td>Kêu bíp khi mở hoặc nhập sai</td></tr>
-  <tr><td>10</td><td>Module Relay 1 kênh 5V <span class="pill opt">tùy chọn</span></td><td>1</td><td>Đóng/ngắt mạch khóa chốt điện</td></tr>
-  <tr><td>11</td><td>Khóa chốt điện (solenoid) 12V + adapter 12V + diode 1N4007 <span class="pill opt">tùy chọn</span></td><td>1 bộ</td><td>Dùng khi muốn làm mô hình khóa thật</td></tr>
+  <tr><th>Linh kiện trong kit</th><th>Dùng</th><th>SL dùng</th><th>Vai trò trong đề tài</th></tr>
+  <tr><td>Bảng phát triển ESP32</td><td><span class="pill ok">dùng</span></td><td>1</td><td>Bộ xử lý trung tâm, phát WiFi, chạy Web Server</td></tr>
+  <tr><td>Cáp Micro USB</td><td><span class="pill ok">dùng</span></td><td>1</td><td>Cấp nguồn và nạp code</td></tr>
+  <tr><td>Breadboard 830 lỗ</td><td><span class="pill ok">dùng</span></td><td>1</td><td>Cắm LED, điện trở, nút, còi và tạo đường nguồn chung</td></tr>
+  <tr><td>Mô-đun Relay 2 kênh 5V</td><td><span class="pill ok">dùng</span></td><td>1</td><td><b>Kênh 1</b>: chốt khóa cửa (tiếng "tách" và đèn trên relay cho biết đã mở). <b>Kênh 2</b>: đóng/ngắt nguồn còi báo động</td></tr>
+  <tr><td>Màn hình OLED 0.96" (I2C)</td><td><span class="pill ok">dùng</span></td><td>1</td><td>Hiển thị trạng thái, thông báo, địa chỉ IP</td></tr>
+  <tr><td>LED xanh / vàng / đỏ</td><td><span class="pill ok">dùng</span></td><td>1 mỗi màu</td><td>Xanh = đã mở · Đỏ = đang khóa / sai PIN · Vàng = có người / tạm khóa / báo động</td></tr>
+  <tr><td>Điện trở 220Ω</td><td><span class="pill ok">dùng</span></td><td>3</td><td>Hạn dòng cho 3 LED</td></tr>
+  <tr><td>Còi thụ động (passive)</td><td><span class="pill ok">dùng</span></td><td>1</td><td>Phát âm báo đúng/sai PIN (phát được nhiều nốt khác nhau)</td></tr>
+  <tr><td>Còi báo động (active)</td><td><span class="pill ok">dùng</span></td><td>1</td><td>Còi báo động, cấp nguồn 5V qua relay kênh 2</td></tr>
+  <tr><td>Công tắc nút nhấn</td><td><span class="pill ok">dùng</span></td><td>2</td><td>Nút <b>EXIT</b> (mở từ trong nhà) và <b>LOCK</b> (khóa ngay + tắt báo động)</td></tr>
+  <tr><td>Cảm biến chuyển động PIR HC-SR501</td><td><span class="pill ok">dùng</span></td><td>1</td><td>Phát hiện người đến gần cửa để bật màn hình</td></tr>
+  <tr><td>Mô-đun tránh chướng ngại vật (IR)</td><td><span class="pill ok">dùng</span></td><td>1</td><td>Làm <b>cảm biến cửa</b>: thấy cánh cửa = cửa đóng, không thấy = cửa mở</td></tr>
+  <tr><td>Cáp Dupont F-M, F-F, M-M</td><td><span class="pill ok">dùng</span></td><td>~28</td><td>Nối dây</td></tr>
+  <tr><td>Mô-đun DHT11</td><td><span class="pill no">không dùng</span></td><td>—</td><td>Có thể thêm hiển thị nhiệt độ/độ ẩm trên OLED (xem Hướng phát triển)</td></tr>
+  <tr><td>Mô-đun quang trở</td><td><span class="pill no">không dùng</span></td><td>—</td><td>Có thể dùng để giảm độ sáng OLED vào ban đêm</td></tr>
+  <tr><td>Chiết áp 10k</td><td><span class="pill no">không dùng</span></td><td>—</td><td>Có thể dùng để chỉnh thời gian tự khóa</td></tr>
+  <tr><td>Điện trở 1k / 10k</td><td><span class="pill no">không dùng</span></td><td>—</td><td>Nút nhấn đã dùng điện trở kéo lên có sẵn bên trong ESP32</td></tr>
 </table>
-<div class="tip"><b>Gợi ý:</b> để demo đề tài, chỉ cần <b>ESP32 + Servo + 2 LED + 2 điện trở</b>. Relay và solenoid là phần mở rộng để mô hình trông giống khóa thật hơn.</div>
+
+<div class="note"><b>Phân biệt 2 loại còi:</b> hai con trông gần giống nhau.
+<ul>
+  <li><b>Còi báo động (active)</b>: mặt dưới thường được bịt kín bằng keo đen, thường còn dán tem. Cấp 5V vào là kêu "bíppp" liên tục.</li>
+  <li><b>Còi thụ động (passive)</b>: mặt dưới hở, nhìn thấy mạch màu xanh. Cấp 5V vào chỉ kêu "tạch" một cái rồi im. Loại này cần tín hiệu PWM để phát ra nốt nhạc.</li>
+  <li>Cách thử: chạm 2 chân còi vào 5V và GND trong khoảng 1 giây. Con nào kêu liên tục là còi active.</li>
+</ul></div>
 
 <!-- 4 -->
 <h2 id="noi-day">4. Sơ đồ nối dây</h2>
+<h3>4.1 Sơ đồ tổng thể</h3>
 <figure>
-<svg viewBox="0 0 900 530" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Arial,sans-serif" font-size="13">
+<svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Arial,sans-serif" font-size="13">
   <!-- ESP32 -->
-  <rect x="40" y="40" width="200" height="450" rx="12" fill="#1f3b73"/>
-  <text x="140" y="75" fill="#fff" font-size="18" font-weight="700" text-anchor="middle">ESP32</text>
-  <text x="140" y="95" fill="#c9d6f5" text-anchor="middle">DevKit V1</text>
-  <rect x="55" y="230" width="90" height="70" rx="6" fill="#c0c7d4"/>
-  <text x="100" y="270" text-anchor="middle" fill="#1f3b73" font-weight="600">WROOM-32</text>
-  <g fill="#fff" text-anchor="end">
-    <text x="228" y="94">GPIO13</text><text x="228" y="124">VIN (5V)</text><text x="228" y="154">GND</text>
-    <text x="228" y="224">GPIO26</text><text x="228" y="284">GPIO27</text><text x="228" y="344">GPIO25</text>
-    <text x="228" y="414">GPIO14</text><text x="228" y="474">GND</text>
+  <rect x="30" y="40" width="210" height="490" rx="12" fill="#1f3b73"/>
+  <text x="45" y="72" fill="#fff" font-size="18" font-weight="700">ESP32</text>
+  <text x="45" y="90" fill="#c9d6f5">DevKit V1</text>
+  <rect x="45" y="250" width="70" height="80" rx="6" fill="#c0c7d4"/>
+  <text x="80" y="294" text-anchor="middle" fill="#1f3b73" font-weight="600" font-size="12">WROOM</text>
+  <g fill="#fff" text-anchor="end" font-size="12.5">
+    <text x="228" y="84">GPIO21 (SDA)</text><text x="228" y="122">GPIO22 (SCL)</text>
+    <text x="228" y="160">GPIO26</text><text x="228" y="198">GPIO27</text>
+    <text x="228" y="236">GPIO18</text><text x="228" y="274">GPIO19</text><text x="228" y="312">GPIO23</text>
+    <text x="228" y="350">GPIO25</text><text x="228" y="388">GPIO32</text><text x="228" y="426">GPIO33</text>
+    <text x="228" y="464">GPIO34</text><text x="228" y="502">GPIO35</text>
   </g>
   <g fill="#f5c542">
-    <circle cx="240" cy="90" r="5"/><circle cx="240" cy="120" r="5"/><circle cx="240" cy="150" r="5"/>
-    <circle cx="240" cy="220" r="5"/><circle cx="240" cy="280" r="5"/><circle cx="240" cy="340" r="5"/>
-    <circle cx="240" cy="410" r="5"/><circle cx="240" cy="470" r="5"/>
+    <circle cx="240" cy="80" r="5"/><circle cx="240" cy="118" r="5"/><circle cx="240" cy="156" r="5"/>
+    <circle cx="240" cy="194" r="5"/><circle cx="240" cy="232" r="5"/><circle cx="240" cy="270" r="5"/>
+    <circle cx="240" cy="308" r="5"/><circle cx="240" cy="346" r="5"/><circle cx="240" cy="384" r="5"/>
+    <circle cx="240" cy="422" r="5"/><circle cx="240" cy="460" r="5"/><circle cx="240" cy="498" r="5"/>
   </g>
 
-  <!-- Servo -->
-  <line x1="240" y1="90" x2="620" y2="90" stroke="#f08a00" stroke-width="3"/>
-  <line x1="240" y1="120" x2="620" y2="120" stroke="#d62828" stroke-width="3"/>
-  <line x1="240" y1="150" x2="620" y2="150" stroke="#7a4a1f" stroke-width="3"/>
-  <rect x="620" y="60" width="220" height="115" rx="10" fill="#e8eefc" stroke="#2f5bd3" stroke-width="2"/>
-  <text x="730" y="82" text-anchor="middle" font-weight="700">Servo SG90</text>
-  <text x="632" y="104">● Cam: tín hiệu</text>
-  <text x="632" y="134">● Đỏ: nguồn 5V</text>
-  <text x="632" y="164">● Nâu: GND</text>
-
-  <!-- LED xanh -->
-  <line x1="240" y1="220" x2="370" y2="220" stroke="#333" stroke-width="2.5"/>
-  <rect x="370" y="210" width="60" height="20" rx="4" fill="#e9d8a6" stroke="#8a6d1f"/>
-  <text x="400" y="204" text-anchor="middle" font-size="12">220Ω</text>
-  <line x1="430" y1="220" x2="545" y2="220" stroke="#333" stroke-width="2.5"/>
-  <circle cx="560" cy="220" r="15" fill="#2ecc71" stroke="#1d7a44" stroke-width="2"/>
-  <text x="560" y="252" text-anchor="middle" font-size="12">LED xanh</text>
-  <text x="530" y="212" font-size="11" fill="#1d7a44">+</text>
-  <line x1="575" y1="220" x2="820" y2="220" stroke="#111" stroke-width="2.5"/>
-  <line x1="820" y1="220" x2="820" y2="500" stroke="#111" stroke-width="2.5"/>
-
-  <!-- LED đỏ -->
-  <line x1="240" y1="280" x2="370" y2="280" stroke="#333" stroke-width="2.5"/>
-  <rect x="370" y="270" width="60" height="20" rx="4" fill="#e9d8a6" stroke="#8a6d1f"/>
-  <text x="400" y="264" text-anchor="middle" font-size="12">220Ω</text>
-  <line x1="430" y1="280" x2="545" y2="280" stroke="#333" stroke-width="2.5"/>
-  <circle cx="560" cy="280" r="15" fill="#e74c3c" stroke="#8e2b20" stroke-width="2"/>
-  <text x="560" y="312" text-anchor="middle" font-size="12">LED đỏ</text>
-  <text x="530" y="272" font-size="11" fill="#8e2b20">+</text>
-  <line x1="575" y1="280" x2="780" y2="280" stroke="#111" stroke-width="2.5"/>
-  <line x1="780" y1="280" x2="780" y2="500" stroke="#111" stroke-width="2.5"/>
-
-  <!-- Buzzer -->
-  <line x1="240" y1="340" x2="520" y2="340" stroke="#8e44ad" stroke-width="2.5" stroke-dasharray="7 4"/>
-  <rect x="520" y="322" width="100" height="36" rx="18" fill="#2b2b2b"/>
-  <text x="570" y="345" text-anchor="middle" fill="#fff" font-size="12">Buzzer</text>
-  <line x1="620" y1="340" x2="740" y2="340" stroke="#111" stroke-width="2.5" stroke-dasharray="7 4"/>
-  <line x1="740" y1="340" x2="740" y2="500" stroke="#111" stroke-width="2.5" stroke-dasharray="7 4"/>
+  <!-- OLED -->
+  <line x1="240" y1="80" x2="560" y2="80" stroke="#2f5bd3" stroke-width="2.5"/>
+  <line x1="240" y1="118" x2="560" y2="118" stroke="#16a085" stroke-width="2.5"/>
+  <rect x="560" y="58" width="190" height="80" rx="8" fill="#111"/>
+  <rect x="610" y="66" width="130" height="64" rx="3" fill="#0d2a4a"/>
+  <text x="675" y="96" text-anchor="middle" fill="#7fd3ff" font-size="12">OLED 0.96"</text>
+  <text x="675" y="114" text-anchor="middle" fill="#7fd3ff" font-size="11">LOCKED</text>
+  <text x="568" y="84" fill="#fff" font-size="11">SDA</text><text x="568" y="122" fill="#fff" font-size="11">SCL</text>
+  <text x="760" y="92" font-size="11.5">VCC → 3V3</text><text x="760" y="110" font-size="11.5">GND → GND</text>
 
   <!-- Relay -->
-  <line x1="240" y1="410" x2="520" y2="410" stroke="#16a085" stroke-width="2.5" stroke-dasharray="7 4"/>
-  <rect x="520" y="385" width="150" height="70" rx="8" fill="#d6f2ec" stroke="#16a085" stroke-width="2"/>
-  <text x="595" y="406" text-anchor="middle" font-weight="700">Relay 5V</text>
-  <text x="530" y="425" font-size="11.5">IN ← GPIO14</text>
-  <text x="530" y="442" font-size="11.5">VCC ← VIN (5V)</text>
-  <line x1="595" y1="455" x2="595" y2="500" stroke="#111" stroke-width="2.5" stroke-dasharray="7 4"/>
+  <line x1="240" y1="156" x2="560" y2="156" stroke="#d35400" stroke-width="2.5"/>
+  <line x1="240" y1="194" x2="560" y2="194" stroke="#8e44ad" stroke-width="2.5"/>
+  <rect x="560" y="146" width="150" height="62" rx="8" fill="#1565c0"/>
+  <text x="568" y="160" fill="#fff" font-size="11">IN1</text><text x="568" y="198" fill="#fff" font-size="11">IN2</text>
+  <text x="645" y="174" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">Relay 2 kênh</text>
+  <text x="645" y="190" text-anchor="middle" fill="#cfe3ff" font-size="10.5">VCC→VIN · GND→GND</text>
+  <text x="716" y="164" font-size="11">CH1 = chốt khóa</text>
+  <line x1="710" y1="194" x2="790" y2="194" stroke="#111" stroke-width="2" stroke-dasharray="5 3"/>
+  <rect x="790" y="180" width="80" height="28" rx="14" fill="#222"/>
+  <text x="830" y="198" text-anchor="middle" fill="#fff" font-size="11">Còi BĐ</text>
+  <text x="716" y="222" font-size="10.5">CH2: COM→5V, NO→còi(+)</text>
 
-  <!-- GND bus -->
-  <line x1="240" y1="470" x2="260" y2="470" stroke="#111" stroke-width="2.5"/>
-  <line x1="260" y1="470" x2="260" y2="500" stroke="#111" stroke-width="2.5"/>
-  <line x1="260" y1="500" x2="820" y2="500" stroke="#111" stroke-width="4"/>
-  <text x="440" y="520" text-anchor="middle" font-weight="600">Đường GND chung (thanh − trên breadboard)</text>
+  <!-- LEDs -->
+  <g font-size="11.5">
+    <line x1="240" y1="232" x2="380" y2="232" stroke="#333" stroke-width="2.5"/>
+    <rect x="380" y="224" width="50" height="16" rx="4" fill="#e9d8a6" stroke="#8a6d1f"/>
+    <text x="405" y="220" text-anchor="middle" font-size="10.5">220Ω</text>
+    <line x1="430" y1="232" x2="560" y2="232" stroke="#333" stroke-width="2.5"/>
+    <circle cx="574" cy="232" r="13" fill="#2ecc71" stroke="#1d7a44" stroke-width="2"/>
+    <text x="596" y="236">LED xanh → GND</text>
 
-  <!-- legend -->
-  <text x="660" y="40" font-size="11.5" fill="#555">Nét đứt = linh kiện tùy chọn</text>
+    <line x1="240" y1="270" x2="380" y2="270" stroke="#333" stroke-width="2.5"/>
+    <rect x="380" y="262" width="50" height="16" rx="4" fill="#e9d8a6" stroke="#8a6d1f"/>
+    <text x="405" y="258" text-anchor="middle" font-size="10.5">220Ω</text>
+    <line x1="430" y1="270" x2="560" y2="270" stroke="#333" stroke-width="2.5"/>
+    <circle cx="574" cy="270" r="13" fill="#f1c40f" stroke="#9a7d0a" stroke-width="2"/>
+    <text x="596" y="274">LED vàng → GND</text>
+
+    <line x1="240" y1="308" x2="380" y2="308" stroke="#333" stroke-width="2.5"/>
+    <rect x="380" y="300" width="50" height="16" rx="4" fill="#e9d8a6" stroke="#8a6d1f"/>
+    <text x="405" y="296" text-anchor="middle" font-size="10.5">220Ω</text>
+    <line x1="430" y1="308" x2="560" y2="308" stroke="#333" stroke-width="2.5"/>
+    <circle cx="574" cy="308" r="13" fill="#e74c3c" stroke="#8e2b20" stroke-width="2"/>
+    <text x="596" y="312">LED đỏ → GND</text>
+  </g>
+
+  <!-- Passive buzzer -->
+  <line x1="240" y1="346" x2="560" y2="346" stroke="#333" stroke-width="2.5"/>
+  <rect x="560" y="332" width="90" height="28" rx="14" fill="#2b2b2b"/>
+  <text x="605" y="350" text-anchor="middle" fill="#fff" font-size="11">Còi thụ động</text>
+  <text x="660" y="350" font-size="11.5">(−) → GND</text>
+
+  <!-- Buttons -->
+  <g font-size="11.5">
+    <line x1="240" y1="384" x2="560" y2="384" stroke="#333" stroke-width="2.5"/>
+    <circle cx="566" cy="384" r="4" fill="#333"/><circle cx="600" cy="384" r="4" fill="#333"/>
+    <line x1="562" y1="372" x2="604" y2="372" stroke="#333" stroke-width="2.5"/><line x1="583" y1="372" x2="583" y2="364" stroke="#333" stroke-width="2.5"/>
+    <text x="612" y="388">Nút EXIT → GND</text>
+    <line x1="240" y1="422" x2="560" y2="422" stroke="#333" stroke-width="2.5"/>
+    <circle cx="566" cy="422" r="4" fill="#333"/><circle cx="600" cy="422" r="4" fill="#333"/>
+    <line x1="562" y1="410" x2="604" y2="410" stroke="#333" stroke-width="2.5"/><line x1="583" y1="410" x2="583" y2="402" stroke="#333" stroke-width="2.5"/>
+    <text x="612" y="426">Nút LOCK → GND</text>
+  </g>
+
+  <!-- IR -->
+  <line x1="240" y1="460" x2="560" y2="460" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="560" y="446" width="150" height="28" rx="6" fill="#d6f2ec" stroke="#16a085"/>
+  <text x="635" y="464" text-anchor="middle" font-size="11.5">Cảm biến IR (OUT)</text>
+  <text x="716" y="464" font-size="11">VCC→3V3, GND</text>
+
+  <!-- PIR -->
+  <line x1="240" y1="498" x2="560" y2="498" stroke="#e67e22" stroke-width="2.5"/>
+  <rect x="560" y="484" width="150" height="28" rx="6" fill="#fdebd0" stroke="#e67e22"/>
+  <text x="635" y="502" text-anchor="middle" font-size="11.5">PIR HC-SR501 (OUT)</text>
+  <text x="716" y="502" font-size="11">VCC→VIN 5V, GND</text>
+
+  <!-- power -->
+  <rect x="30" y="548" width="840" height="40" rx="8" fill="#f4f6fa" stroke="#d9dee7"/>
+  <text x="450" y="573" text-anchor="middle" font-size="12.5"><tspan font-weight="700">Nguồn:</tspan> 3V3 → OLED, cảm biến IR  ·  VIN (5V) → Relay, PIR, còi báo động  ·  Tất cả GND nối chung</text>
 </svg>
-<figcaption>Hình 1. Sơ đồ nối dây ESP32 với Servo, LED, Buzzer và Relay</figcaption>
+<figcaption>Hình 1. Sơ đồ nối dây (chỉ vẽ dây tín hiệu, dây nguồn ghi bên cạnh từng linh kiện)</figcaption>
 </figure>
 
-<h3>Bảng nối dây chi tiết</h3>
+<h3>4.2 Bảng nối dây chi tiết</h3>
 <table>
-  <tr><th>Linh kiện</th><th>Chân linh kiện</th><th>Nối tới ESP32</th><th>Ghi chú</th></tr>
-  <tr><td rowspan="3">Servo SG90</td><td>Dây cam (Signal)</td><td><b>GPIO 13</b></td><td>Tín hiệu PWM</td></tr>
-  <tr><td>Dây đỏ (VCC)</td><td><b>VIN</b> (5V)</td><td>VIN có 5V khi cắm USB</td></tr>
-  <tr><td>Dây nâu (GND)</td><td><b>GND</b></td><td></td></tr>
-  <tr><td rowspan="2">LED xanh</td><td>Chân dài (+, anode)</td><td><b>GPIO 26</b> qua điện trở 220Ω</td><td rowspan="2">Chân dài là cực +</td></tr>
-  <tr><td>Chân ngắn (−, cathode)</td><td><b>GND</b></td></tr>
-  <tr><td rowspan="2">LED đỏ</td><td>Chân dài (+)</td><td><b>GPIO 27</b> qua điện trở 220Ω</td><td rowspan="2"></td></tr>
-  <tr><td>Chân ngắn (−)</td><td><b>GND</b></td></tr>
-  <tr><td rowspan="2">Buzzer <span class="pill opt">tùy chọn</span></td><td>(+)</td><td><b>GPIO 25</b></td><td rowspan="2">Dùng loại active (tự kêu khi có điện)</td></tr>
-  <tr><td>(−)</td><td><b>GND</b></td></tr>
-  <tr><td rowspan="3">Relay 1 kênh <span class="pill opt">tùy chọn</span></td><td>IN</td><td><b>GPIO 14</b></td><td rowspan="3">Đa số module relay kích ở mức LOW</td></tr>
-  <tr><td>VCC</td><td><b>VIN</b> (5V)</td></tr>
-  <tr><td>GND</td><td><b>GND</b></td></tr>
+  <tr><th>Linh kiện</th><th>Chân linh kiện</th><th>Nối tới</th><th>Ghi chú</th></tr>
+  <tr><td rowspan="4">OLED 0.96"</td><td>VCC</td><td><b>3V3</b></td><td rowspan="4">Giao tiếp I2C, địa chỉ 0x3C. Một số màn hình ghi thứ tự chân là GND-VCC-SCL-SDA, hãy đọc chữ in trên màn hình</td></tr>
+  <tr><td>GND</td><td>GND</td></tr>
+  <tr><td>SCL</td><td><b>GPIO 22</b></td></tr>
+  <tr><td>SDA</td><td><b>GPIO 21</b></td></tr>
+  <tr><td rowspan="4">Relay 2 kênh<br>(phía chân điều khiển)</td><td>VCC</td><td><b>VIN</b> (5V)</td><td rowspan="4">Kích mức LOW. Giữ nguyên jumper JD-VCC–VCC</td></tr>
+  <tr><td>GND</td><td>GND</td></tr>
+  <tr><td>IN1</td><td><b>GPIO 26</b></td></tr>
+  <tr><td>IN2</td><td><b>GPIO 27</b></td></tr>
+  <tr><td rowspan="2">Relay kênh 2<br>(phía cọc vít)</td><td>COM2</td><td>Đường <b>5V</b> trên breadboard</td><td rowspan="2">Relay đóng thì còi có điện. Nới vít, luồn đầu dây vào rồi vặn chặt lại</td></tr>
+  <tr><td>NO2</td><td>Chân (+) còi báo động</td></tr>
+  <tr><td>Còi báo động (active)</td><td>(−)</td><td>GND</td><td>Chân dài là (+)</td></tr>
+  <tr><td rowspan="2">LED xanh</td><td>Chân dài (+)</td><td><b>GPIO 18</b> qua điện trở 220Ω</td><td rowspan="6">Chân dài của LED là cực (+)</td></tr>
+  <tr><td>Chân ngắn (−)</td><td>GND</td></tr>
+  <tr><td rowspan="2">LED vàng</td><td>Chân dài (+)</td><td><b>GPIO 19</b> qua điện trở 220Ω</td></tr>
+  <tr><td>Chân ngắn (−)</td><td>GND</td></tr>
+  <tr><td rowspan="2">LED đỏ</td><td>Chân dài (+)</td><td><b>GPIO 23</b> qua điện trở 220Ω</td></tr>
+  <tr><td>Chân ngắn (−)</td><td>GND</td></tr>
+  <tr><td rowspan="2">Còi thụ động</td><td>(+)</td><td><b>GPIO 25</b></td><td rowspan="2">Không cần điện trở</td></tr>
+  <tr><td>(−)</td><td>GND</td></tr>
+  <tr><td>Nút EXIT</td><td>2 chân chéo nhau</td><td><b>GPIO 32</b> và GND</td><td rowspan="2">Dùng điện trở kéo lên bên trong ESP32 (<code>INPUT_PULLUP</code>)</td></tr>
+  <tr><td>Nút LOCK</td><td>2 chân chéo nhau</td><td><b>GPIO 33</b> và GND</td></tr>
+  <tr><td rowspan="3">Cảm biến tránh vật cản (IR)</td><td>VCC</td><td><b>3V3</b></td><td rowspan="3">OUT = LOW khi thấy vật cản</td></tr>
+  <tr><td>GND</td><td>GND</td></tr>
+  <tr><td>OUT</td><td><b>GPIO 34</b></td></tr>
+  <tr><td rowspan="3">PIR HC-SR501</td><td>VCC</td><td><b>VIN</b> (5V)</td><td rowspan="3">Chân OUT xuất ra 3.3V nên an toàn cho ESP32. Lật module lên sẽ thấy chữ ghi tên chân dưới nắp nhựa</td></tr>
+  <tr><td>GND</td><td>GND</td></tr>
+  <tr><td>OUT</td><td><b>GPIO 35</b></td></tr>
 </table>
 
-<h3>Nối khóa solenoid 12V qua Relay (tùy chọn)</h3>
-<pre><code>Adapter 12V (+) ──► Relay COM
-Relay NO        ──► Solenoid (+)
-Solenoid (−)    ──► Adapter 12V (−)
-Diode 1N4007 mắc song song với solenoid: vạch trắng (cathode) quay về phía (+)</code></pre>
-<p>Mạch 12V này <b>tách biệt hoàn toàn</b> với ESP32. Relay đóng vai trò công tắc do ESP32 điều khiển.</p>
+<h3>4.3 Bố trí đường nguồn trên breadboard</h3>
+<p>Breadboard 830 lỗ có 2 cặp đường nguồn chạy dọc hai mép (vạch đỏ <b>+</b> và vạch xanh <b>−</b>). Mình dùng 2 cặp này như sau:</p>
+<pre><code>Mép trên :  (+) = 3V3   ← dây từ chân 3V3 của ESP32     → cấp cho OLED, cảm biến IR
+            (−) = GND   ← dây từ chân GND của ESP32
+Mép dưới :  (+) = 5V    ← dây từ chân VIN của ESP32     → cấp cho Relay, PIR, còi báo động
+            (−) = GND   ← nối 1 dây sang (−) mép trên</code></pre>
+<div class="warn"><b>⚠️ Không được để đường 3V3 và đường 5V chạm nhau.</b> Một số breadboard còn bị <b>đứt đường nguồn ở giữa</b> (vạch màu bị ngắt quãng). Nếu breadboard của bạn như vậy, hãy cắm thêm dây nối hai nửa lại.</div>
 
-<div class="warn">
-<b>⚠️ Những lỗi cần tránh</b>
+<h3>4.4 Số lượng dây cần dùng</h3>
+<p>Breadboard 830 lỗ hơi hẹp so với ESP32. Cắm ESP32 lên thì một bên chỉ còn 1 hàng lỗ trống, rất khó cắm dây. Vì vậy nên <b>đặt ESP32 bên ngoài breadboard</b> và cắm đầu cái của dây Dupont thẳng vào chân ESP32:</p>
+<table>
+  <tr><th>Loại dây</th><th>Dùng cho</th></tr>
+  <tr><td><b>F-F</b> (cái-cái)</td><td>Nối thẳng từ chân ESP32 sang chân module: SDA, SCL, IN1, IN2, OUT của IR, OUT của PIR</td></tr>
+  <tr><td><b>F-M</b> (cái-đực)</td><td>Nối từ chân ESP32 xuống breadboard (3V3, VIN, GND, 3 LED, còi, 2 nút) và từ breadboard lên chân nguồn của các module</td></tr>
+  <tr><td><b>M-M</b> (đực-đực)</td><td>Nối giữa 2 điểm trên breadboard (GND mép trên ↔ mép dưới, chân GND của nút) và nối vào cọc vít của relay</td></tr>
+</table>
+<div class="tip"><b>Thiếu dây F-M?</b> Cắm nối một dây F-F với một dây M-M là được một dây F-M. Nếu vẫn thiếu, dây Dupont bán theo bó 40 sợi rất rẻ. Ngoài ra ESP32 có 2–3 chân GND, nên một số module có thể lấy GND trực tiếp từ ESP32 bằng dây F-F.</div>
+
+<div class="warn"><b>⚠️ Những lỗi cần tránh</b>
 <ul>
-  <li><b>Tuyệt đối không</b> để dây 12V chạm vào bất kỳ chân nào của ESP32, nếu không board sẽ cháy.</li>
-  <li>Tất cả GND (ESP32, servo, LED, relay) phải <b>nối chung</b> với nhau.</li>
-  <li>Không dùng các chân <b>GPIO 6–11</b> (bị nối với bộ nhớ flash) và <b>GPIO 34–39</b> (chỉ đọc được, không xuất tín hiệu).</li>
-  <li>Hạn chế dùng các chân GPIO 0, 2, 12, 15 vì chúng ảnh hưởng đến quá trình khởi động.</li>
-  <li>Nếu servo quay mà ESP32 bị reset, nghĩa là cổng USB không cấp đủ dòng. Khi đó cấp cho servo một nguồn 5V riêng, nhưng <b>vẫn phải nối GND chung</b> với ESP32.</li>
-  <li>Luôn rút cáp USB trước khi cắm hoặc tháo dây.</li>
-</ul>
-</div>
+  <li><b>Luôn rút cáp USB</b> trước khi cắm hoặc tháo dây.</li>
+  <li>Không cấp 5V cho OLED hay cảm biến IR khi chân tín hiệu của chúng nối thẳng vào ESP32. Hai module này dùng <b>3V3</b>.</li>
+  <li>Tất cả GND phải <b>nối chung</b> với nhau.</li>
+  <li>GPIO 34 và 35 chỉ đọc được (input-only), nên chỉ dùng cho cảm biến. Không dùng GPIO 6–11 vì chúng nối với bộ nhớ flash.</li>
+  <li>Cắm LED đúng chiều: chân dài nối phía GPIO, chân ngắn nối GND.</li>
+</ul></div>
 
 <!-- 5 -->
-<h2 id="phan-mem">5. Cài đặt phần mềm</h2>
+<h2 id="lap-rap">5. Lắp ráp từng bước (thử đến đâu chắc đến đó)</h2>
+<p>Không nên cắm hết một lần. Hãy lắp từng phần, nạp code và kiểm tra rồi mới lắp tiếp. Code đã được viết để <b>thiếu linh kiện nào thì chỉ phần đó không chạy</b>, các phần khác vẫn hoạt động bình thường.</p>
+<div class="grid2">
+  <div class="card"><h4>Bước 1: Nguồn + 3 LED</h4><p>Đi dây 3V3/5V/GND ra breadboard. Cắm 3 LED kèm điện trở. Nạp code: LED đỏ sáng. Vào web nhập 1234 thì LED xanh sáng.</p></div>
+  <div class="card"><h4>Bước 2: OLED</h4><p>Nối 4 dây. Bấm nút EN để khởi động lại: màn hình hiện LOCKED và IP 192.168.4.1.</p></div>
+  <div class="card"><h4>Bước 3: Còi thụ động + 2 nút</h4><p>Bấm EXIT: nghe giai điệu, LED xanh sáng. Bấm LOCK: kêu "tít", khóa lại.</p></div>
+  <div class="card"><h4>Bước 4: Relay 2 kênh</h4><p>Nối VCC, GND, IN1, IN2. Mở khóa thì relay 1 kêu "tách" và đèn trên relay sáng.</p></div>
+  <div class="card"><h4>Bước 5: Còi báo động qua relay CH2</h4><p>COM2 nối 5V, NO2 nối còi (+), còi (−) nối GND. Nhập sai 3 lần thì còi kêu 15 giây.</p></div>
+  <div class="card"><h4>Bước 6: Cảm biến IR (cửa)</h4><p>Chỉnh biến trở trên module sao cho đưa tay cách khoảng 3–5cm thì đèn trên module sáng. Tay che = cửa đóng, bỏ tay ra = cửa mở.</p></div>
+  <div class="card"><h4>Bước 7: PIR</h4><p>Chờ khoảng 30–60 giây sau khi cấp điện để PIR ổn định. Vẫy tay trước PIR: LED vàng sáng, OLED bật lên.</p></div>
+  <div class="card"><h4>Bước 8: Làm mô hình</h4><p>Gắn các linh kiện lên hộp carton hoặc mô hình cửa. Đặt cảm biến IR hướng vào cánh cửa, PIR hướng ra phía ngoài cửa.</p></div>
+</div>
+
+<div class="note"><b>Chỉnh PIR HC-SR501:</b> trên module có 2 biến trở.
+<ul>
+  <li><b>Sx</b> (sensitivity): chỉnh khoảng cách phát hiện, từ 3 đến 7m.</li>
+  <li><b>Tx</b> (time delay): chỉnh thời gian giữ tín hiệu. Nên <b>vặn hết ngược chiều kim đồng hồ</b> (khoảng 3 giây) để phản hồi nhanh.</li>
+</ul>
+Jumper chọn chế độ nên đặt ở <b>H</b> (repeat trigger), nghĩa là còn thấy người thì còn giữ tín hiệu.</div>
+<div class="note"><b>Chưa lắp cảm biến cửa (IR)?</b> Hãy đặt <code>USE_DOOR_SENSOR = false</code> trong code. Nếu không, chân GPIO 34 để trống sẽ đọc giá trị lung tung và gây báo động giả.</div>
+
+<!-- 6 -->
+<h2 id="phan-mem">6. Cài đặt phần mềm</h2>
 <ol class="steps">
   <li><b>Cài Arduino IDE 2.x</b> từ trang <code>arduino.cc/en/software</code>.</li>
   <li><b>Thêm board ESP32:</b>
     <ul>
       <li>Vào <i>File → Preferences</i>. Ở ô <i>Additional boards manager URLs</i>, dán đường dẫn:<br>
       <code>https://espressif.github.io/arduino-esp32/package_esp32_index.json</code></li>
-      <li>Vào <i>Tools → Board → Boards Manager</i>, tìm <b>esp32</b> (của Espressif Systems) rồi bấm <b>Install</b>.</li>
+      <li>Vào <i>Tools → Board → Boards Manager</i>, tìm <b>esp32</b> (của <b>Espressif Systems</b>) rồi bấm Install. Đừng nhầm với gói "Arduino ESP32 Boards".</li>
     </ul>
   </li>
-  <li><b>Cài thư viện Servo:</b> vào <i>Sketch → Include Library → Manage Libraries</i>, tìm <b>ESP32Servo</b> (tác giả Kevin Harrington) rồi bấm Install.<br>
-    Các thư viện <code>WiFi.h</code>, <code>WebServer.h</code> và <code>Preferences.h</code> có sẵn trong gói board ESP32, không cần cài thêm.</li>
+  <li><b>Cài thư viện:</b> vào <i>Sketch → Include Library → Manage Libraries</i> và cài 2 thư viện:
+    <ul>
+      <li><b>Adafruit SSD1306</b>: khi được hỏi có cài các thư viện phụ thuộc không, chọn <b>Install All</b>.</li>
+      <li><b>Adafruit GFX Library</b>: thường đã được cài cùng ở bước trên.</li>
+    </ul>
+    Các thư viện <code>WiFi</code>, <code>WebServer</code>, <code>Preferences</code> và <code>Wire</code> có sẵn trong gói board ESP32.</li>
   <li><b>Driver USB:</b>
     <ul>
       <li><b>Windows:</b> cài driver <b>CP210x</b> hoặc <b>CH340</b>, tùy loại chip USB in trên board.</li>
       <li><b>Linux:</b> chạy lệnh <code>sudo usermod -aG dialout $USER</code> rồi đăng xuất và đăng nhập lại.</li>
-      <li><b>macOS:</b> thường nhận board ngay. Nếu board dùng chip CH340 thì cài thêm driver.</li>
     </ul>
   </li>
 </ol>
 
-<!-- 6 -->
-<h2 id="nap-code">6. Nạp code vào ESP32</h2>
+<!-- 7 -->
+<h2 id="nap-code">7. Nạp code vào ESP32</h2>
 <ol class="steps">
   <li>Tạo thư mục <code>SmartLock</code> và lưu mã nguồn ở <a href="#appendix">Phụ lục</a> thành file <code>SmartLock/SmartLock.ino</code>. Tên file phải trùng với tên thư mục.</li>
-  <li>Vào <i>Tools → Board</i> và chọn <b>ESP32 Dev Module</b>.</li>
-  <li>Vào <i>Tools → Port</i> và chọn cổng của board (Windows: <code>COMx</code>, Linux: <code>/dev/ttyUSB0</code>, macOS: <code>/dev/cu.usbserial-…</code>).</li>
-  <li>Bấm <b>Upload</b> (nút mũi tên →). Nếu hiện lỗi <code>Failed to connect… Connecting…</code>, hãy <b>giữ nút BOOT</b> trên board cho đến khi thấy chữ <code>Writing…</code>.</li>
-  <li>Mở <i>Serial Monitor</i>, chọn tốc độ <b>115200 baud</b> rồi bấm nút <b>EN</b> (reset). Màn hình sẽ hiện:
-<pre><code>WiFi: SmartLock-ESP32
+  <li>Vào <i>Tools → Board</i> và chọn <b>ESP32 Dev Module</b>. Vào <i>Tools → Port</i> và chọn cổng COM (Windows) hoặc <code>/dev/ttyUSB0</code> (Linux).</li>
+  <li>Bấm <b>Upload</b>. Nếu hiện lỗi <code>Failed to connect… Connecting…</code>, hãy <b>giữ nút BOOT</b> trên board cho đến khi thấy chữ <code>Writing…</code>.</li>
+  <li>Mở <i>Serial Monitor</i>, chọn tốc độ <b>115200 baud</b> rồi bấm nút <b>EN</b>. Màn hình sẽ hiện:
+<pre><code>00:00:00 Khóa cửa (khởi động)
+WiFi: SmartLock-ESP32
 Mo trinh duyet: http://192.168.4.1</code></pre></li>
 </ol>
-<div class="tip"><b>Mẹo:</b> nên làm từng phần một. Cắm 2 LED trước, nạp code và thử trên web cho chạy được, rồi mới cắm thêm servo và relay. Như vậy nếu có lỗi sẽ dễ tìm ra chỗ sai.</div>
-
-<!-- 7 -->
-<h2 id="su-dung">7. Hướng dẫn sử dụng</h2>
-<ol class="steps">
-  <li>Trên điện thoại, kết nối WiFi <b>SmartLock-ESP32</b> với mật khẩu <b>12345678</b>. Nếu điện thoại báo "không có Internet" thì chọn <i>Vẫn kết nối</i>.</li>
-  <li>Mở trình duyệt và vào <b>http://192.168.4.1</b>.</li>
-  <li>Nhập PIN mặc định <b>1234</b> rồi bấm <b>OK</b>. Servo mở, LED xanh sáng. Sau 5 giây khóa tự đóng lại.</li>
-  <li>Bấm nút <b>Khóa ngay</b> nếu muốn khóa trước khi hết 5 giây.</li>
-  <li>Mở mục <b>Đổi mã PIN</b>, nhập PIN cũ và PIN mới (4–8 chữ số) rồi bấm Lưu. PIN mới được ghi vào flash.</li>
-</ol>
-<table>
-  <tr><th>Trạng thái</th><th>LED xanh</th><th>LED đỏ</th><th>Servo</th><th>Relay</th><th>Còi</th></tr>
-  <tr><td>Đang khóa</td><td>Tắt</td><td>Sáng</td><td>0°</td><td>Ngắt</td><td>—</td></tr>
-  <tr><td>Mở khóa (PIN đúng)</td><td>Sáng</td><td>Tắt</td><td>90°</td><td>Đóng</td><td>Bíp 1 tiếng</td></tr>
-  <tr><td>Nhập sai PIN</td><td>Tắt</td><td>Nháy 3 lần</td><td>0°</td><td>Ngắt</td><td>Bíp 3 tiếng</td></tr>
-  <tr><td>Tạm khóa (sai 3 lần)</td><td>Tắt</td><td>Sáng</td><td>0°</td><td>Ngắt</td><td>Từ chối mọi lần nhập trong 30s</td></tr>
-</table>
+<p>Code đã được biên dịch thử trên core ESP32 <b>3.3.12</b> (của Espressif) với thư viện Adafruit SSD1306 2.5.17 và Adafruit GFX 1.12.6. Chương trình chiếm khoảng 75% bộ nhớ flash.</p>
 
 <!-- 8 -->
-<h2 id="giai-thich">8. Giải thích mã nguồn</h2>
-<h3>8.1 Cấu trúc chương trình</h3>
+<h2 id="su-dung">8. Hướng dẫn sử dụng</h2>
+<ol class="steps">
+  <li>Trên điện thoại, kết nối WiFi <b>SmartLock-ESP32</b> với mật khẩu <b>12345678</b>. Nếu điện thoại báo "không có Internet" thì chọn <i>Vẫn kết nối</i>, và tắt dữ liệu di động (4G).</li>
+  <li>Mở trình duyệt và vào <b>http://192.168.4.1</b>. Địa chỉ này cũng hiện ở dòng cuối của OLED.</li>
+  <li>Phần đầu trang có 4 ô trạng thái: <b>Khóa</b>, <b>Cửa</b>, <b>Có người</b>, <b>Báo động</b>.</li>
+  <li>Nhập PIN mặc định <b>1234</b> rồi bấm <b>OK</b> để mở khóa.</li>
+  <li>Mục <b>Đổi mã PIN</b>: nhập PIN cũ và PIN mới (4–8 chữ số).</li>
+  <li>Mục <b>Nhật ký</b>: xem 8 sự kiện gần nhất kèm thời gian tính từ lúc khởi động.</li>
+</ol>
+<h3>Ý nghĩa đèn, màn hình và còi</h3>
 <table>
-  <tr><th>Phần</th><th>Nội dung</th></tr>
-  <tr><td>Khai báo &amp; cấu hình</td><td>Tên và mật khẩu WiFi, các chân GPIO, góc servo, PIN mặc định, số lần được nhập sai, thời gian tạm khóa và thời gian tự khóa</td></tr>
-  <tr><td><code>PAGE_HTML</code></td><td>Giao diện web (HTML + CSS + JavaScript) lưu trong bộ nhớ flash (<code>PROGMEM</code>)</td></tr>
-  <tr><td><code>isValidPin()</code>, <code>safeEquals()</code></td><td>Kiểm tra định dạng PIN và so sánh chuỗi an toàn</td></tr>
-  <tr><td><code>lockDoor()</code>, <code>unlockDoor()</code>, <code>wrongPinAlert()</code></td><td>Điều khiển servo, relay, LED và còi</td></tr>
-  <tr><td><code>handle*()</code></td><td>Các hàm xử lý yêu cầu HTTP</td></tr>
-  <tr><td><code>setup()</code></td><td>Khởi tạo chân, servo, đọc PIN từ flash, phát WiFi, đăng ký các đường dẫn</td></tr>
-  <tr><td><code>loop()</code></td><td>Phục vụ client và kiểm tra đã đến lúc tự động khóa lại chưa</td></tr>
+  <tr><th>Trạng thái</th><th>LED xanh</th><th>LED đỏ</th><th>LED vàng</th><th>OLED</th><th>Relay 1</th><th>Âm thanh</th></tr>
+  <tr><td>Đang khóa</td><td>Tắt</td><td>Sáng</td><td>Tắt</td><td>LOCKED (tự tắt màn hình sau 30s không có ai)</td><td>Ngắt</td><td>—</td></tr>
+  <tr><td>Có người trước cửa</td><td>Tắt</td><td>Sáng</td><td>Sáng</td><td>"Moi nhap ma PIN..."</td><td>Ngắt</td><td>—</td></tr>
+  <tr><td>Mở khóa</td><td>Sáng</td><td>Tắt</td><td>—</td><td>OPEN · "Moi vao!"</td><td>Đóng</td><td>Giai điệu đi lên</td></tr>
+  <tr><td>Sai PIN</td><td>Tắt</td><td>Nháy</td><td>—</td><td>"Sai PIN! 1/3"</td><td>Ngắt</td><td>"Tè tè" (giọng trầm)</td></tr>
+  <tr><td>Tạm khóa</td><td>Tắt</td><td>Sáng</td><td>Nháy chậm</td><td>WAIT 25s</td><td>Ngắt</td><td>—</td></tr>
+  <tr><td>Báo động</td><td>Tắt</td><td>Sáng</td><td>Nháy nhanh</td><td>! ALARM !</td><td>Ngắt</td><td>Còi báo động kêu (relay 2)</td></tr>
 </table>
-
-<h3>8.2 Các API của Web Server</h3>
-<table>
-  <tr><th>Đường dẫn</th><th>Phương thức</th><th>Tham số</th><th>Chức năng</th></tr>
-  <tr><td><code>/</code></td><td>GET</td><td>—</td><td>Trả về trang keypad</td></tr>
-  <tr><td><code>/status</code></td><td>GET</td><td>—</td><td>Trả JSON <code>{"locked":true,"lockout":0}</code></td></tr>
-  <tr><td><code>/unlock</code></td><td>POST</td><td><code>pin</code></td><td>Kiểm tra PIN và mở khóa</td></tr>
-  <tr><td><code>/lock</code></td><td>POST</td><td>—</td><td>Khóa ngay</td></tr>
-  <tr><td><code>/changepin</code></td><td>POST</td><td><code>old</code>, <code>new</code></td><td>Đổi PIN và lưu vào flash</td></tr>
-</table>
-
-<h3>8.3 Đoạn code chính: xử lý mở khóa</h3>
-<pre><code>void handleUnlock() {
-  unsigned long remain = lockoutRemainingSec();
-  if (remain &gt; 0) { ... từ chối vì đang tạm khóa ... }
-
-  String pin = server.arg("pin");   // lấy PIN từ body POST
-  pin.trim();                       // bỏ khoảng trắng thừa
-  if (!isValidPin(pin)) { ... }     // chỉ chấp nhận 4-8 chữ số
-
-  if (safeEquals(pin, currentPin)) {
-    failCount = 0;
-    unlockDoor();                   // servo 90°, relay ON, LED xanh
-  } else {
-    failCount++;
-    wrongPinAlert();                // LED đỏ nháy, còi kêu
-    if (failCount &gt;= MAX_FAILS) {   // sai 3 lần -&gt; tạm khóa 30s
-      lockedOut = true;
-      lockoutStart = millis();
-    }
-  }
-}</code></pre>
-
-<h3>8.4 Tự động khóa lại (không dùng <code>delay</code>)</h3>
-<pre><code>void loop() {
-  server.handleClient();
-  if (!isLocked &amp;&amp; millis() - unlockedAt &gt;= AUTO_LOCK_MS) {
-    lockDoor();
-  }
-}</code></pre>
-<p>Chương trình dùng <code>millis()</code> thay cho <code>delay()</code> để ESP32 vẫn tiếp tục phục vụ trang web trong lúc chờ khóa lại. Cách viết phép trừ <code>millis() - unlockedAt</code> vẫn đúng ngay cả khi <code>millis()</code> bị tràn số (sau khoảng 49 ngày).</p>
-
-<h3>8.5 Giao diện web (JavaScript)</h3>
+<h3>Cách tắt báo động</h3>
 <ul>
-  <li>Các phím 0–9 ghép số vào biến <code>pin</code>. Màn hình chỉ hiện dấu <code>●</code>, không hiện số thật.</li>
-  <li>Khi bấm OK, trang gửi <code>fetch('/unlock', {method:'POST', body: URLSearchParams})</code>, sau đó hiển thị thông báo từ JSON trả về và xóa PIN vừa nhập.</li>
-  <li>Hàm <code>setInterval(refresh, 1000)</code> cập nhật trạng thái mỗi giây, gồm cả số giây tạm khóa còn lại.</li>
+  <li>Nhập <b>đúng PIN</b> trên web (chỉ được khi không đang trong 30 giây tạm khóa).</li>
+  <li>Bấm nút <b>LOCK</b> ở phía trong nhà.</li>
+  <li>Báo động tự tắt sau <b>15 giây</b>.</li>
+  <li>Nút "Khóa ngay" trên web <b>không</b> tắt được báo động. Đây là cố ý: kẻ gian vào được WiFi cũng không tắt được còi.</li>
 </ul>
 
 <!-- 9 -->
-<h2 id="bao-mat">9. Bảo mật &amp; xử lý chuỗi</h2>
+<h2 id="giai-thich">9. Giải thích mã nguồn</h2>
+<h3>9.1 Cấu trúc chương trình</h3>
 <table>
-  <tr><th>#</th><th>Biện pháp</th><th>Cách làm trong code</th><th>Chống lại</th></tr>
-  <tr><td>1</td><td>Kiểm tra dữ liệu đầu vào</td><td><code>isValidPin()</code>: độ dài 4–8 và tất cả ký tự phải là chữ số (<code>isDigit</code>)</td><td>Dữ liệu rác, chuỗi quá dài, ký tự đặc biệt</td></tr>
-  <tr><td>2</td><td>Chuẩn hóa chuỗi</td><td><code>trim()</code> trước khi so sánh</td><td>Lỗi do khoảng trắng thừa</td></tr>
-  <tr><td>3</td><td>So sánh thời gian cố định</td><td><code>safeEquals()</code> gộp XOR của mọi ký tự, không dừng sớm ở ký tự sai đầu tiên</td><td>Timing attack (đo thời gian phản hồi để đoán dần từng ký tự)</td></tr>
-  <tr><td>4</td><td>Giới hạn số lần thử</td><td>Sai 3 lần thì tạm khóa 30 giây</td><td>Brute-force (thử lần lượt 0000 → 9999)</td></tr>
-  <tr><td>5</td><td>Gửi PIN bằng POST</td><td>PIN nằm trong body, không nằm trên URL</td><td>Lộ PIN qua lịch sử trình duyệt hoặc log</td></tr>
-  <tr><td>6</td><td>Kiểm tra ở phía server</td><td>PIN đúng chỉ lưu trên ESP32, trình duyệt không bao giờ biết</td><td>Đọc mã nguồn trang web để lấy PIN</td></tr>
-  <tr><td>7</td><td>Đổi PIN cần xác thực</td><td><code>/changepin</code> yêu cầu đúng PIN cũ</td><td>Người lạ tự ý đổi PIN</td></tr>
-  <tr><td>8</td><td>Tự động khóa</td><td>Khóa lại sau 5 giây</td><td>Quên khóa cửa</td></tr>
-  <tr><td>9</td><td>Mật khẩu WiFi</td><td>WPA2 với <code>AP_PASS</code></td><td>Người lạ truy cập mạng của khóa</td></tr>
+  <tr><th>Phần</th><th>Nội dung</th></tr>
+  <tr><td>Khai báo &amp; cấu hình</td><td>WiFi, các chân GPIO, <code>RELAY_ACTIVE_LOW</code>, <code>USE_DOOR_SENSOR</code>, các mốc thời gian (tạm khóa, tự khóa, báo động, tắt màn hình)</td></tr>
+  <tr><td>Biến trạng thái</td><td><code>isLocked</code>, <code>failCount</code>, <code>lockedOut</code>, <code>alarmOn</code>, <code>doorOpen</code>, <code>motion</code>…</td></tr>
+  <tr><td><code>PAGE_HTML</code></td><td>Giao diện web (HTML + CSS + JS) lưu trong flash bằng <code>PROGMEM</code></td></tr>
+  <tr><td><code>addLog()</code>, <code>uptimeStr()</code></td><td>Nhật ký sự kiện dạng vòng (8 dòng), kèm thời gian dạng hh:mm:ss</td></tr>
+  <tr><td><code>isValidPin()</code>, <code>safeEquals()</code></td><td>Kiểm tra định dạng PIN và so sánh chuỗi an toàn</td></tr>
+  <tr><td><code>lockDoor()</code>, <code>unlockDoor()</code></td><td>Điều khiển relay 1, LED xanh/đỏ, ghi nhật ký</td></tr>
+  <tr><td><code>startAlarm()</code>, <code>stopAlarm()</code></td><td>Bật/tắt relay 2 (còi báo động)</td></tr>
+  <tr><td><code>playSuccess()</code>, <code>playFail()</code>, <code>playClick()</code></td><td>Phát âm báo bằng còi thụ động qua hàm <code>tone()</code></td></tr>
+  <tr><td><code>readSensors()</code></td><td>Đọc PIR và cảm biến cửa, phát hiện đột nhập</td></tr>
+  <tr><td><code>pressed()</code>, <code>handleButtons()</code></td><td>Đọc nút nhấn có chống dội (debounce) 50ms</td></tr>
+  <tr><td><code>drawOled()</code></td><td>Vẽ màn hình mỗi 200ms, tự tắt màn hình khi không có hoạt động</td></tr>
+  <tr><td><code>handle*()</code></td><td>Các hàm xử lý yêu cầu HTTP</td></tr>
+  <tr><td><code>loop()</code></td><td>Phục vụ web, đọc nút và cảm biến, tự khóa, hết giờ báo động, cập nhật LED vàng và OLED. <b>Không dùng <code>delay()</code> dài</b></td></tr>
 </table>
-<p><b>Ước tính độ an toàn:</b> PIN 4 chữ số có 10.000 tổ hợp. Mỗi 3 lần thử bị chặn 30 giây, nên để thử hết toàn bộ tổ hợp cần khoảng 10.000 / 3 × 30s ≈ <b>27,8 giờ</b>. Với PIN 6 chữ số, con số này tăng lên khoảng <b>115 ngày</b>.</p>
-<div class="note"><b>Hạn chế (nên nêu trong báo cáo):</b> dữ liệu truyền qua HTTP không được mã hóa, nên ai bắt gói tin trong cùng mạng WiFi có thể đọc được PIN. PIN cũng đang được lưu dưới dạng chuỗi gốc. Xem cách khắc phục ở mục <a href="#phat-trien">Hướng phát triển</a>.</div>
+
+<h3>9.2 Các API của Web Server</h3>
+<table>
+  <tr><th>Đường dẫn</th><th>Phương thức</th><th>Tham số</th><th>Chức năng</th></tr>
+  <tr><td><code>/</code></td><td>GET</td><td>—</td><td>Trả về trang keypad</td></tr>
+  <tr><td><code>/status</code></td><td>GET</td><td>—</td><td>JSON: <code>{"locked","lockout","door","motion","alarm","log":[…]}</code></td></tr>
+  <tr><td><code>/unlock</code></td><td>POST</td><td><code>pin</code></td><td>Kiểm tra PIN và mở khóa</td></tr>
+  <tr><td><code>/lock</code></td><td>POST</td><td>—</td><td>Khóa ngay (không tắt báo động)</td></tr>
+  <tr><td><code>/changepin</code></td><td>POST</td><td><code>old</code>, <code>new</code></td><td>Đổi PIN và lưu vào flash</td></tr>
+</table>
+
+<h3>9.3 Xử lý mở khóa</h3>
+<pre><code>void handleUnlock() {
+  if (lockoutRemainingSec() &gt; 0) { ... từ chối vì đang tạm khóa ... }
+
+  String pin = server.arg("pin");      // lấy PIN từ body của POST
+  pin.trim();                          // bỏ khoảng trắng thừa
+  if (!isValidPin(pin)) { ... }        // chỉ nhận 4-8 chữ số
+
+  if (safeEquals(pin, currentPin)) {   // so sánh thời gian cố định
+    unlockDoor("PIN trên web");        // relay 1 ON, LED xanh, tắt báo động
+    playSuccess();
+    return;
+  }
+  failCount++;
+  if (failCount &gt;= MAX_FAILS) {        // sai 3 lần
+    lockedOut = true;                  // tạm khóa 30s
+    startAlarm("sai PIN 3 lần");       // relay 2 ON -&gt; còi báo động
+  }
+  playFail();
+}</code></pre>
+
+<h3>9.4 Cảm biến cửa và phát hiện đột nhập</h3>
+<pre><code>bool open = digitalRead(PIN_DOOR_IR) == HIGH;  // không thấy cánh cửa -&gt; cửa mở
+if (open != doorOpen) {                        // chỉ xử lý khi trạng thái THAY ĐỔI
+  doorOpen = open;
+  if (open &amp;&amp; isLocked) startAlarm("cửa bị mở khi đang khóa");
+}</code></pre>
+<p>Chương trình chỉ phản ứng khi trạng thái <b>thay đổi</b> (gọi là bắt cạnh, edge detection), nên mỗi lần cửa mở chỉ báo động một lần. Lúc khởi động, trạng thái cửa được đọc trước để tránh báo động giả.</p>
+
+<h3>9.5 Tự khóa lại an toàn</h3>
+<pre><code>if (!isLocked &amp;&amp; millis() - unlockedAt &gt;= AUTO_LOCK_MS &amp;&amp; !(USE_DOOR_SENSOR &amp;&amp; doorOpen)) {
+  lockDoor("tự động");
+}</code></pre>
+<p>Hệ thống chỉ khóa lại khi đã hết 5 giây <b>và cửa đã đóng</b>. Nếu cửa vẫn đang mở, nó sẽ chờ, vì khóa khi cửa mở thì chốt không vào được. Chương trình dùng <code>millis()</code> thay cho <code>delay()</code> để ESP32 vẫn phục vụ web, đọc nút và cảm biến trong lúc chờ. Phép trừ <code>millis() - mốc</code> vẫn đúng kể cả khi <code>millis()</code> bị tràn số (sau khoảng 49 ngày).</p>
+
+<h3>9.6 Nút nhấn có chống dội (debounce)</h3>
+<pre><code>bool pressed(Button&amp; b) {
+  bool now = digitalRead(b.pin);                       // INPUT_PULLUP: thả = HIGH, nhấn = LOW
+  if (now != b.last &amp;&amp; millis() - b.changedAt &gt; 50) {  // bỏ qua nhiễu dưới 50ms
+    b.changedAt = millis();
+    b.last = now;
+    return now == LOW;                                 // chỉ trả true lúc vừa nhấn xuống
+  }
+  return false;
+}</code></pre>
+
+<h3>9.7 Giao diện web</h3>
+<ul>
+  <li>Các phím 0–9 ghép số vào biến <code>pin</code>. Màn hình chỉ hiện dấu <code>●</code>, không hiện số thật.</li>
+  <li>Khi bấm OK, trang gửi <code>fetch('/unlock', {method:'POST', body: URLSearchParams})</code> và hiển thị thông báo từ JSON trả về.</li>
+  <li><code>setInterval(refresh, 1000)</code> gọi <code>/status</code> mỗi giây để cập nhật 4 ô trạng thái và nhật ký.</li>
+</ul>
 
 <!-- 10 -->
-<h2 id="kiem-thu">10. Kịch bản kiểm thử</h2>
+<h2 id="bao-mat">10. Bảo mật &amp; xử lý chuỗi</h2>
 <table>
-  <tr><th>TC</th><th>Thao tác</th><th>Kết quả mong đợi</th></tr>
-  <tr><td>01</td><td>Cấp nguồn cho ESP32</td><td>LED đỏ sáng, servo ở 0°, Serial in ra IP</td></tr>
-  <tr><td>02</td><td>Nhập <code>1234</code> rồi bấm OK</td><td>"Mở khóa thành công!", LED xanh sáng, servo 90°</td></tr>
-  <tr><td>03</td><td>Chờ 5 giây sau khi mở</td><td>Tự khóa lại, LED đỏ sáng</td></tr>
-  <tr><td>04</td><td>Nhập <code>0000</code></td><td>"Sai PIN! Còn 2 lần thử", LED đỏ nháy</td></tr>
-  <tr><td>05</td><td>Nhập sai 3 lần liên tiếp</td><td>Tạm khóa 30 giây, nhập đúng PIN cũng bị từ chối</td></tr>
-  <tr><td>06</td><td>Nhập <code>12</code> (dưới 4 số)</td><td>"PIN phải có 4-8 chữ số"</td></tr>
-  <tr><td>07</td><td>Đổi PIN với PIN cũ sai</td><td>"PIN cũ không đúng"</td></tr>
-  <tr><td>08</td><td>Đổi PIN mới thành <code>abcd</code></td><td>"PIN mới phải gồm 4-8 chữ số"</td></tr>
-  <tr><td>09</td><td>Đổi PIN thành <code>5678</code>, rút điện rồi cắm lại</td><td><code>5678</code> mở được, <code>1234</code> bị từ chối</td></tr>
-  <tr><td>10</td><td>Bấm "Khóa ngay" khi đang mở</td><td>Khóa lập tức</td></tr>
+  <tr><th>#</th><th>Biện pháp</th><th>Cách làm trong code</th><th>Chống lại</th></tr>
+  <tr><td>1</td><td>Kiểm tra dữ liệu đầu vào</td><td><code>isValidPin()</code>: độ dài 4–8, tất cả ký tự phải là chữ số (<code>isDigit</code>)</td><td>Dữ liệu rác, chuỗi quá dài, ký tự đặc biệt</td></tr>
+  <tr><td>2</td><td>Chuẩn hóa chuỗi</td><td><code>trim()</code> trước khi so sánh</td><td>Lỗi do khoảng trắng thừa</td></tr>
+  <tr><td>3</td><td>So sánh thời gian cố định</td><td><code>safeEquals()</code> gộp XOR của mọi ký tự, không dừng sớm ở ký tự sai đầu tiên</td><td>Timing attack (đo thời gian phản hồi để đoán dần từng ký tự)</td></tr>
+  <tr><td>4</td><td>Giới hạn số lần thử</td><td>Sai 3 lần thì tạm khóa 30 giây và bật báo động</td><td>Brute-force (thử lần lượt 0000 → 9999)</td></tr>
+  <tr><td>5</td><td>Gửi PIN bằng POST</td><td>PIN nằm trong body, không nằm trên URL</td><td>Lộ PIN qua lịch sử trình duyệt hoặc log</td></tr>
+  <tr><td>6</td><td>Kiểm tra ở phía server</td><td>PIN đúng chỉ lưu trên ESP32, trình duyệt không bao giờ biết</td><td>Đọc mã nguồn trang web để lấy PIN</td></tr>
+  <tr><td>7</td><td>Đổi PIN cần xác thực</td><td><code>/changepin</code> yêu cầu đúng PIN cũ, lần thất bại được ghi nhật ký</td><td>Người lạ tự ý đổi PIN</td></tr>
+  <tr><td>8</td><td>Phát hiện đột nhập</td><td>Cửa mở khi đang khóa thì báo động</td><td>Phá cửa, cạy khóa</td></tr>
+  <tr><td>9</td><td>Phân quyền tắt báo động</td><td>Chỉ PIN đúng hoặc nút LOCK bên trong mới tắt được còi, web <code>/lock</code> thì không</td><td>Kẻ gian vào được WiFi rồi tắt còi</td></tr>
+  <tr><td>10</td><td>Tự khóa lại</td><td>Khóa lại sau 5 giây khi cửa đã đóng</td><td>Quên khóa cửa</td></tr>
+  <tr><td>11</td><td>Nhật ký</td><td>Ghi lại mở/khóa, sai PIN, đổi PIN, đột nhập, có người</td><td>Truy vết sự cố</td></tr>
+  <tr><td>12</td><td>Mật khẩu WiFi</td><td>WPA2 với <code>AP_PASS</code></td><td>Người lạ truy cập mạng của khóa</td></tr>
 </table>
+<p><b>Ước tính độ an toàn:</b> PIN 4 chữ số có 10.000 tổ hợp. Mỗi 3 lần thử bị chặn 30 giây (kèm còi báo động), nên để thử hết toàn bộ tổ hợp cần khoảng 10.000 / 3 × 30s ≈ <b>27,8 giờ</b>, và còi sẽ kêu hơn 3.300 lần. Với PIN 6 chữ số, con số này tăng lên khoảng <b>115 ngày</b>.</p>
+<div class="note"><b>Hạn chế (nên nêu trong báo cáo):</b>
+<ul>
+  <li>Dữ liệu truyền qua HTTP không được mã hóa, nên ai bắt gói tin trong cùng mạng WiFi có thể đọc được PIN.</li>
+  <li>PIN được lưu dưới dạng chuỗi gốc trong flash.</li>
+  <li>Bộ đếm số lần sai dùng chung cho mọi người dùng và bị xóa khi khởi động lại.</li>
+  <li>Relay chỉ mô phỏng chốt khóa. Muốn có khóa thật cần thêm khóa chốt điện (solenoid) 12V.</li>
+</ul></div>
 
 <!-- 11 -->
-<h2 id="loi">11. Xử lý lỗi thường gặp</h2>
+<h2 id="kiem-thu">11. Kịch bản kiểm thử</h2>
 <table>
-  <tr><th>Hiện tượng</th><th>Nguyên nhân</th><th>Cách sửa</th></tr>
-  <tr><td>Máy tính không nhận cổng COM / ttyUSB</td><td>Cáp chỉ dùng để sạc, hoặc thiếu driver hay thiếu quyền</td><td>Đổi sang cáp dữ liệu, cài driver CP210x/CH340, hoặc thêm user vào nhóm <code>dialout</code></td></tr>
-  <tr><td><code>ESP32Servo.h: No such file</code></td><td>Chưa cài thư viện</td><td>Cài ESP32Servo bằng Library Manager</td></tr>
-  <tr><td><code>Failed to connect to ESP32</code></td><td>Board chưa vào chế độ nạp code</td><td>Giữ nút BOOT trong lúc upload</td></tr>
-  <tr><td>Servo rung hoặc ESP32 tự khởi động lại</td><td>Nguồn yếu</td><td>Cấp 5V riêng cho servo, nối GND chung</td></tr>
-  <tr><td>Relay hoạt động ngược</td><td>Module kích ở mức HIGH</td><td>Đổi <code>RELAY_ACTIVE_LOW = false</code></td></tr>
-  <tr><td>LED không sáng</td><td>Cắm ngược cực, hoặc điện trở sai hàng trên breadboard</td><td>Chân dài nối phía GPIO, kiểm tra lại các hàng</td></tr>
-  <tr><td>Không vào được 192.168.4.1</td><td>Điện thoại tự chuyển sang 4G hoặc WiFi khác</td><td>Tắt dữ liệu di động, chọn "Vẫn kết nối"</td></tr>
-  <tr><td>Servo quay sai góc</td><td>Góc chưa phù hợp với cơ cấu chốt</td><td>Chỉnh <code>SERVO_LOCKED</code> / <code>SERVO_UNLOCKED</code></td></tr>
-  <tr><td>Serial Monitor in ra ký tự lạ</td><td>Sai tốc độ baud</td><td>Chọn 115200</td></tr>
+  <tr><th>TC</th><th>Thao tác</th><th>Kết quả mong đợi</th></tr>
+  <tr><td>01</td><td>Cấp nguồn cho ESP32</td><td>LED đỏ sáng, OLED hiện LOCKED + IP, Serial in ra IP</td></tr>
+  <tr><td>02</td><td>Nhập <code>1234</code> rồi bấm OK</td><td>"Mở khóa thành công!", relay 1 kêu "tách", LED xanh sáng, nghe giai điệu</td></tr>
+  <tr><td>03</td><td>Che cảm biến IR (cửa đóng), chờ 5 giây</td><td>Tự khóa lại, LED đỏ sáng</td></tr>
+  <tr><td>04</td><td>Mở khóa, <b>không</b> che IR (cửa mở), chờ 10 giây</td><td>Vẫn mở. Che IR thì mới khóa lại</td></tr>
+  <tr><td>05</td><td>Nhập <code>0000</code></td><td>"Sai PIN! Còn 2 lần thử", LED đỏ nháy, OLED hiện "Sai PIN! 1/3"</td></tr>
+  <tr><td>06</td><td>Nhập sai 3 lần liên tiếp</td><td>Tạm khóa 30 giây, còi báo động kêu, LED vàng nháy, OLED hiện "! ALARM !"</td></tr>
+  <tr><td>07</td><td>Trong lúc tạm khóa, nhập đúng PIN</td><td>Bị từ chối: "Thử lại sau …s"</td></tr>
+  <tr><td>08</td><td>Đang khóa thì bỏ tay khỏi IR (cửa bị mở)</td><td>Báo động đột nhập, nhật ký ghi "BÁO ĐỘNG: cửa bị mở khi đang khóa"</td></tr>
+  <tr><td>09</td><td>Đang báo động, bấm "Khóa ngay" trên web</td><td>Còi <b>vẫn kêu</b></td></tr>
+  <tr><td>10</td><td>Đang báo động, bấm nút LOCK</td><td>Còi tắt, cửa khóa</td></tr>
+  <tr><td>11</td><td>Bấm nút EXIT</td><td>Mở khóa, không cần PIN</td></tr>
+  <tr><td>12</td><td>Vẫy tay trước PIR</td><td>LED vàng sáng, OLED bật và hiện "Moi nhap ma PIN..."</td></tr>
+  <tr><td>13</td><td>Không ai đến gần trong 30 giây</td><td>OLED tự tắt</td></tr>
+  <tr><td>14</td><td>Nhập <code>12</code> hoặc đổi PIN mới thành <code>abcd</code></td><td>Báo PIN không hợp lệ</td></tr>
+  <tr><td>15</td><td>Đổi PIN thành <code>5678</code>, rút điện rồi cắm lại</td><td><code>5678</code> mở được, <code>1234</code> bị từ chối</td></tr>
 </table>
 
 <!-- 12 -->
-<h2 id="phat-trien">12. Hướng phát triển</h2>
+<h2 id="loi">12. Xử lý lỗi thường gặp</h2>
+<table>
+  <tr><th>Hiện tượng</th><th>Nguyên nhân</th><th>Cách sửa</th></tr>
+  <tr><td>Máy tính không nhận cổng COM / ttyUSB</td><td>Cáp chỉ dùng để sạc, hoặc thiếu driver hay thiếu quyền</td><td>Đổi sang cáp dữ liệu, cài driver CP210x/CH340, hoặc thêm user vào nhóm <code>dialout</code></td></tr>
+  <tr><td><code>Adafruit_SSD1306.h: No such file</code></td><td>Chưa cài thư viện</td><td>Cài Adafruit SSD1306 (chọn Install All)</td></tr>
+  <tr><td><code>Failed to connect to ESP32</code></td><td>Board chưa vào chế độ nạp code</td><td>Giữ nút BOOT trong lúc upload</td></tr>
+  <tr><td>OLED không hiện gì, Serial báo "Khong tim thay OLED"</td><td>Sai dây hoặc sai địa chỉ I2C</td><td>Kiểm tra lại SDA=21, SCL=22, VCC=3V3. Thử đổi <code>OLED_ADDR</code> thành <code>0x3D</code></td></tr>
+  <tr><td>Relay hoạt động ngược (bình thường đóng, mở khóa lại ngắt)</td><td>Module kích ở mức HIGH</td><td>Đổi <code>RELAY_ACTIVE_LOW = false</code></td></tr>
+  <tr><td>Relay không nhả, hoặc đèn trên relay sáng mờ</td><td>Mức 3.3V của ESP32 không đủ để ngắt hẳn optocoupler</td><td>Rút jumper JD-VCC. Nối chân <b>JD-VCC</b> với 5V (cấp cho cuộn relay) và chân <b>VCC</b> với 3V3 (cấp cho optocoupler)</td></tr>
+  <tr><td>Báo động liên tục ngay sau khi khởi động</td><td>Cảm biến IR chưa lắp, hoặc chưa chỉnh khoảng cách</td><td>Chỉnh biến trở trên module IR, hoặc đặt <code>USE_DOOR_SENSOR = false</code></td></tr>
+  <tr><td>PIR báo có người liên tục</td><td>PIR đang trong thời gian khởi động, hoặc Tx đặt quá lâu</td><td>Chờ 60 giây sau khi cấp điện, vặn Tx hết ngược chiều kim đồng hồ</td></tr>
+  <tr><td>Còi thụ động không kêu, chỉ "tạch"</td><td>Lắp nhầm 2 loại còi</td><td>Đổi chỗ 2 con còi (xem mục 3)</td></tr>
+  <tr><td>Bấm nút không có phản ứng</td><td>Cắm nút sai chân</td><td>Cắm nút bắc ngang rãnh giữa breadboard và dùng 2 chân <b>chéo nhau</b></td></tr>
+  <tr><td>Không vào được 192.168.4.1</td><td>Điện thoại tự chuyển sang 4G hoặc WiFi khác</td><td>Tắt dữ liệu di động, chọn "Vẫn kết nối"</td></tr>
+  <tr><td>ESP32 tự khởi động lại khi relay đóng</td><td>Nguồn USB yếu</td><td>Dùng cổng USB khác hoặc củ sạc 5V/2A</td></tr>
+</table>
+
+<!-- 13 -->
+<h2 id="phat-trien">13. Hướng phát triển</h2>
 <ul>
+  <li><b>Tận dụng linh kiện còn lại:</b> hiển thị nhiệt độ/độ ẩm (DHT11) lên OLED; dùng quang trở để giảm độ sáng màn hình vào ban đêm; dùng chiết áp để chỉnh thời gian tự khóa.</li>
   <li><b>Chế độ STA:</b> cho ESP32 kết nối vào WiFi nhà bằng <code>WiFi.begin(ssid, pass)</code> để truy cập từ mọi thiết bị trong mạng.</li>
   <li><b>Băm PIN:</b> chỉ lưu <code>SHA-256(salt + PIN)</code> bằng thư viện <code>mbedtls</code> có sẵn trên ESP32, không lưu chuỗi gốc.</li>
-  <li><b>HTTPS / mã hóa:</b> dùng chứng chỉ tự ký hoặc đưa hệ thống lên MQTT qua TLS.</li>
-  <li><b>Nhật ký truy cập:</b> ghi lại thời gian mở cửa và số lần nhập sai (đồng bộ giờ qua NTP), hiển thị trên trang quản trị.</li>
-  <li><b>Thông báo:</b> gửi tin nhắn Telegram hoặc email khi có người nhập sai nhiều lần.</li>
+  <li><b>Mã hóa đường truyền:</b> HTTPS với chứng chỉ tự ký, hoặc MQTT qua TLS.</li>
+  <li><b>Thông báo từ xa:</b> gửi tin nhắn Telegram khi có báo động.</li>
   <li><b>Mã OTP dùng một lần</b> để cấp quyền vào cửa tạm thời cho khách.</li>
-  <li><b>Xác thực đa lớp:</b> thêm bàn phím 4x4 vật lý, thẻ RFID RC522 hoặc cảm biến vân tay.</li>
-  <li><b>Cảm biến cửa:</b> dùng công tắc từ (reed switch) để biết cửa đang thực sự mở hay đóng.</li>
+  <li><b>Khóa thật:</b> nối relay kênh 1 với khóa chốt điện 12V (dùng adapter 12V riêng, mắc thêm diode 1N4007 song song với cuộn hút của khóa).</li>
+  <li><b>Thêm cách mở thứ hai:</b> thẻ RFID RC522 hoặc cảm biến vân tay.</li>
 </ul>
 
 <!-- Appendix -->
 <h2 id="appendix">Phụ lục: mã nguồn đầy đủ (SmartLock.ino)</h2>
 <pre class="full"><code>/*
  * KHÓA CỬA THÔNG MINH - NHẬP PIN TRÊN WEB (ESP32)
- * - ESP32 tự phát WiFi, điện thoại kết nối rồi mở http://192.168.4.1
- * - Nhập đúng PIN -&gt; Servo quay mở + Relay đóng + LED xanh, tự khóa lại sau 5s
- * - Sai 3 lần -&gt; khóa tạm 30s (chống dò mật khẩu)
- * - Đổi PIN trên web, PIN lưu vào bộ nhớ flash (mất điện không mất)
+ * Dùng đúng linh kiện trong bộ kit ESP32 starter:
+ *   - Relay kênh 1 : chốt khóa cửa (relay đóng = mở khóa)
+ *   - Relay kênh 2 : bật còi báo động (active buzzer)
+ *   - OLED 0.96"   : hiển thị trạng thái
+ *   - LED xanh/vàng/đỏ : mở khóa / cảnh báo / đang khóa
+ *   - Còi thụ động : âm báo đúng/sai PIN
+ *   - 2 nút nhấn   : EXIT (mở từ trong nhà), LOCK (khóa ngay + tắt báo động)
+ *   - PIR HC-SR501 : phát hiện có người trước cửa -&gt; bật màn hình
+ *   - Cảm biến tránh vật cản (IR): cảm biến cửa đóng/mở
  *
- * Thư viện cần cài: ESP32Servo (Kevin Harrington)
+ * Luồng chính: điện thoại kết nối WiFi "SmartLock-ESP32" -&gt; mở http://192.168.4.1
+ * -&gt; nhập PIN -&gt; đúng thì mở khóa, tự khóa lại khi hết 5s và cửa đã đóng.
+ * Sai 3 lần -&gt; tạm khóa 30s + báo động. Mở cửa khi đang khóa -&gt; báo động đột nhập.
+ *
+ * Thư viện cần cài: Adafruit SSD1306, Adafruit GFX Library
  * Board: ESP32 Dev Module
  */
 
 #include &lt;WiFi.h&gt;
 #include &lt;WebServer.h&gt;
 #include &lt;Preferences.h&gt;
-#include &lt;ESP32Servo.h&gt;
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
 
 // ===== WiFi do ESP32 tự phát =====
 const char* AP_SSID = "SmartLock-ESP32";
 const char* AP_PASS = "12345678";  // tối thiểu 8 ký tự
 
 // ===== Chân kết nối =====
-const int SERVO_PIN  = 13;
-const int RELAY_PIN  = 14;
-const int LED_GREEN  = 26;
-const int LED_RED    = 27;
-const int BUZZER_PIN = 25;
+// OLED: SDA = GPIO 21, SCL = GPIO 22 (I2C mặc định)
+const int PIN_RELAY_LOCK  = 26;  // Relay IN1
+const int PIN_RELAY_ALARM = 27;  // Relay IN2
+const int PIN_LED_GREEN   = 18;
+const int PIN_LED_YELLOW  = 19;
+const int PIN_LED_RED     = 23;
+const int PIN_BUZZER      = 25;  // còi thụ động
+const int PIN_BTN_EXIT    = 32;
+const int PIN_BTN_LOCK    = 33;
+const int PIN_DOOR_IR     = 34;  // OUT cảm biến tránh vật cản
+const int PIN_PIR         = 35;  // OUT cảm biến PIR
+
 const bool RELAY_ACTIVE_LOW = true;  // đa số module relay kích mức LOW
+const bool USE_DOOR_SENSOR  = true;  // đặt false nếu chưa lắp cảm biến cửa
 
 // ===== Thông số =====
-const int SERVO_LOCKED   = 0;   // góc khi khóa
-const int SERVO_UNLOCKED = 90;  // góc khi mở
-const char* DEFAULT_PIN  = "1234";
-const int MAX_FAILS              = 3;
-const unsigned long LOCKOUT_MS   = 30000;
-const unsigned long AUTO_LOCK_MS = 5000;
+const char* DEFAULT_PIN = "1234";
+const int MAX_FAILS                   = 3;
+const unsigned long LOCKOUT_MS        = 30000;
+const unsigned long AUTO_LOCK_MS      = 5000;
+const unsigned long ALARM_MS          = 15000;
+const unsigned long SCREEN_TIMEOUT_MS = 30000;
+const unsigned long OLED_MSG_MS       = 3000;
+
+// ===== OLED =====
+const int OLED_W = 128;
+const int OLED_H = 64;
+const uint8_t OLED_ADDR = 0x3C;  // một số màn hình dùng 0x3D
 
 WebServer server(80);
 Preferences prefs;
-Servo lockServo;
+Adafruit_SSD1306 display(OLED_W, OLED_H, &amp;Wire, -1);
 
+// ===== Trạng thái =====
 String currentPin;
 bool isLocked = true;
 unsigned long unlockedAt = 0;
 int failCount = 0;
 bool lockedOut = false;
 unsigned long lockoutStart = 0;
+bool alarmOn = false;
+unsigned long alarmStart = 0;
+bool doorOpen = false;
+bool motion = false;
+
+bool oledOk = false;
+bool screenOn = true;
+unsigned long lastActivity = 0;
+String oledMsg;
+unsigned long oledMsgAt = 0;
+
+struct Button {
+  int pin;
+  bool last;
+  unsigned long changedAt;
+};
+Button btnExit = {PIN_BTN_EXIT, HIGH, 0};
+Button btnLock = {PIN_BTN_LOCK, HIGH, 0};
+
+// ===== Nhật ký sự kiện (8 dòng gần nhất) =====
+const int LOG_SIZE = 8;
+String logs[LOG_SIZE];
+int logCount = 0;
 
 // ================= GIAO DIỆN WEB =================
 const char PAGE_HTML[] PROGMEM = R"rawliteral(
@@ -496,25 +700,33 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
 &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
 &lt;title&gt;Smart Lock&lt;/title&gt;
 &lt;style&gt;
-  body{font-family:sans-serif;background:#1e1e2e;color:#fff;text-align:center;margin:0;padding:20px}
-  h2{margin:8px 0}
-  #status{font-size:18px;font-weight:bold;margin:10px 0}
-  .locked{color:#ff5c5c}.unlocked{color:#4cd964}
-  #dots{font-size:32px;letter-spacing:8px;height:44px;margin:12px 0}
-  .pad{display:grid;grid-template-columns:repeat(3,80px);gap:12px;justify-content:center}
-  .pad button{height:70px;font-size:26px;border:none;border-radius:50%;background:#33334d;color:#fff}
+  body{font-family:sans-serif;background:#1e1e2e;color:#fff;text-align:center;margin:0;padding:16px}
+  h2{margin:6px 0}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:320px;margin:10px auto}
+  .chip{padding:8px;border-radius:10px;background:#33334d;font-size:14px}
+  .red{background:#8e2b20}.green{background:#1d7a44}.yellow{background:#9a6b00}
+  #dots{font-size:32px;letter-spacing:8px;height:44px;margin:10px 0}
+  .pad{display:grid;grid-template-columns:repeat(3,76px);gap:12px;justify-content:center}
+  .pad button{height:68px;font-size:26px;border:none;border-radius:50%;background:#33334d;color:#fff}
   .pad button:active{background:#55557a}
   .pad .ok{background:#2e8b57}.pad .clr{background:#b03a2e}
   #msg{min-height:24px;margin:12px 0}
   .ok-msg{color:#4cd964}.err-msg{color:#ff5c5c}
-  details{margin-top:24px}
+  details{margin-top:18px}
   input{padding:10px;margin:6px;border-radius:8px;border:none;width:160px;font-size:16px}
   .btn{padding:10px 20px;border:none;border-radius:8px;background:#4a6cf7;color:#fff;font-size:16px;margin:6px}
+  #log{list-style:none;padding:0;max-width:340px;margin:8px auto;text-align:left;font-size:13px;color:#c9c9d9}
+  #log li{padding:4px 0;border-bottom:1px solid #33334d}
 &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
   &lt;h2&gt;🔐 Smart Lock&lt;/h2&gt;
-  &lt;div id="status"&gt;...&lt;/div&gt;
+  &lt;div class="chips"&gt;
+    &lt;div id="cLock" class="chip"&gt;...&lt;/div&gt;
+    &lt;div id="cDoor" class="chip"&gt;...&lt;/div&gt;
+    &lt;div id="cMotion" class="chip"&gt;...&lt;/div&gt;
+    &lt;div id="cAlarm" class="chip"&gt;...&lt;/div&gt;
+  &lt;/div&gt;
   &lt;div id="dots"&gt;----&lt;/div&gt;
   &lt;div class="pad"&gt;
     &lt;button onclick="press(1)"&gt;1&lt;/button&gt;&lt;button onclick="press(2)"&gt;2&lt;/button&gt;&lt;button onclick="press(3)"&gt;3&lt;/button&gt;
@@ -532,12 +744,18 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
     &lt;button class="btn" onclick="changePin()"&gt;Lưu&lt;/button&gt;
   &lt;/details&gt;
 
+  &lt;details open&gt;
+    &lt;summary&gt;Nhật ký&lt;/summary&gt;
+    &lt;ul id="log"&gt;&lt;/ul&gt;
+  &lt;/details&gt;
+
 &lt;script&gt;
 let pin = '';
 function show(){ document.getElementById('dots').textContent = pin.length ? '●'.repeat(pin.length) : '----'; }
 function press(k){ if(pin.length &lt; 8){ pin += k; show(); } }
 function clr(){ pin = ''; show(); }
 function msg(t, ok){ const m = document.getElementById('msg'); m.textContent = t; m.className = ok ? 'ok-msg' : 'err-msg'; }
+function chip(id, text, cls){ const c = document.getElementById(id); c.textContent = text; c.className = 'chip ' + cls; }
 
 async function post(url, data){
   const r = await fetch(url, {method:'POST',
@@ -559,10 +777,12 @@ async function changePin(){
 async function refresh(){
   try{
     const j = await (await fetch('/status')).json();
-    const s = document.getElementById('status');
-    if(j.lockout &gt; 0){ s.textContent = '⛔ Tạm khóa ' + j.lockout + 's'; s.className = 'locked'; }
-    else if(j.locked){ s.textContent = '🔒 ĐANG KHÓA'; s.className = 'locked'; }
-    else { s.textContent = '🔓 ĐÃ MỞ'; s.className = 'unlocked'; }
+    if(j.lockout &gt; 0) chip('cLock', '⛔ Tạm khóa ' + j.lockout + 's', 'yellow');
+    else chip('cLock', j.locked ? '🔒 Đang khóa' : '🔓 Đã mở', j.locked ? 'red' : 'green');
+    chip('cDoor', j.door ? '🚪 Cửa mở' : '🚪 Cửa đóng', j.door ? 'yellow' : '');
+    chip('cMotion', j.motion ? '🚶 Có người' : '🚶 Không có ai', j.motion ? 'yellow' : '');
+    chip('cAlarm', j.alarm ? '🚨 BÁO ĐỘNG' : '🔕 Bình thường', j.alarm ? 'red' : '');
+    document.getElementById('log').innerHTML = j.log.map(l =&gt; '&lt;li&gt;' + l + '&lt;/li&gt;').join('');
   }catch(e){}
 }
 show(); refresh(); setInterval(refresh, 1000);
@@ -570,6 +790,32 @@ show(); refresh(); setInterval(refresh, 1000);
 &lt;/body&gt;
 &lt;/html&gt;
 )rawliteral";
+
+// ================= TIỆN ÍCH =================
+String uptimeStr() {
+  unsigned long s = millis() / 1000;
+  char buf[12];
+  snprintf(buf, sizeof(buf), "%02lu:%02lu:%02lu", s / 3600, (s / 60) % 60, s % 60);
+  return buf;
+}
+
+void addLog(const String&amp; msg) {
+  for (int i = LOG_SIZE - 1; i &gt; 0; i--) logs[i] = logs[i - 1];
+  logs[0] = uptimeStr() + " " + msg;
+  if (logCount &lt; LOG_SIZE) logCount++;
+  Serial.println(logs[0]);
+}
+
+void touch() {
+  lastActivity = millis();
+}
+
+// Thông báo ngắn trên OLED (chỉ ASCII, không dấu)
+void showMsg(const String&amp; m) {
+  oledMsg = m;
+  oledMsgAt = millis();
+  touch();
+}
 
 // ================= XỬ LÝ CHUỖI / BẢO MẬT =================
 bool isValidPin(const String&amp; p) {
@@ -599,48 +845,175 @@ unsigned long lockoutRemainingSec() {
 }
 
 // ================= ĐIỀU KHIỂN PHẦN CỨNG =================
-void setRelay(bool on) {
-  digitalWrite(RELAY_PIN, (on ^ RELAY_ACTIVE_LOW) ? HIGH : LOW);
+void setRelay(int pin, bool on) {
+  digitalWrite(pin, (on ^ RELAY_ACTIVE_LOW) ? HIGH : LOW);
 }
 
-void beep(int times, int ms) {
-  for (int i = 0; i &lt; times; i++) {
-    digitalWrite(BUZZER_PIN, HIGH);
-    delay(ms);
-    digitalWrite(BUZZER_PIN, LOW);
-    delay(ms);
+void playSuccess() {
+  tone(PIN_BUZZER, 1047, 120); delay(140);
+  tone(PIN_BUZZER, 1319, 120); delay(140);
+  tone(PIN_BUZZER, 1568, 200); delay(220);
+  noTone(PIN_BUZZER);
+}
+
+void playFail() {
+  for (int i = 0; i &lt; 2; i++) {
+    digitalWrite(PIN_LED_RED, LOW);
+    tone(PIN_BUZZER, 300, 180); delay(200);
+    digitalWrite(PIN_LED_RED, HIGH);
+    delay(120);
   }
+  noTone(PIN_BUZZER);
 }
 
-void lockDoor() {
+void playClick() {
+  tone(PIN_BUZZER, 880, 80); delay(100);
+  noTone(PIN_BUZZER);
+}
+
+void startAlarm(const String&amp; reason) {
+  if (!alarmOn) addLog("BÁO ĐỘNG: " + reason);
+  alarmOn = true;
+  alarmStart = millis();
+  setRelay(PIN_RELAY_ALARM, true);
+  touch();
+}
+
+void stopAlarm() {
+  if (!alarmOn) return;
+  alarmOn = false;
+  setRelay(PIN_RELAY_ALARM, false);
+  addLog("Tắt báo động");
+}
+
+void lockDoor(const String&amp; source) {
   isLocked = true;
-  lockServo.write(SERVO_LOCKED);
-  setRelay(false);
-  digitalWrite(LED_GREEN, LOW);
-  digitalWrite(LED_RED, HIGH);
-  Serial.println("[LOCK] Da khoa");
+  setRelay(PIN_RELAY_LOCK, false);
+  digitalWrite(PIN_LED_GREEN, LOW);
+  digitalWrite(PIN_LED_RED, HIGH);
+  addLog("Khóa cửa (" + source + ")");
+  showMsg("Da khoa cua");
 }
 
-void unlockDoor() {
+void unlockDoor(const String&amp; source) {
   isLocked = false;
   unlockedAt = millis();
-  lockServo.write(SERVO_UNLOCKED);
-  setRelay(true);
-  digitalWrite(LED_GREEN, HIGH);
-  digitalWrite(LED_RED, LOW);
-  beep(1, 150);
-  Serial.println("[LOCK] Da mo");
+  failCount = 0;
+  stopAlarm();
+  setRelay(PIN_RELAY_LOCK, true);
+  digitalWrite(PIN_LED_GREEN, HIGH);
+  digitalWrite(PIN_LED_RED, LOW);
+  addLog("Mở khóa (" + source + ")");
+  showMsg("Moi vao!");
 }
 
-void wrongPinAlert() {
-  for (int i = 0; i &lt; 3; i++) {
-    digitalWrite(LED_RED, LOW);
-    digitalWrite(BUZZER_PIN, HIGH);
-    delay(100);
-    digitalWrite(LED_RED, HIGH);
-    digitalWrite(BUZZER_PIN, LOW);
-    delay(100);
+// LED vàng: nháy nhanh khi báo động, nháy chậm khi tạm khóa, sáng khi có người
+void updateYellowLed() {
+  unsigned long t = millis();
+  if (alarmOn) digitalWrite(PIN_LED_YELLOW, (t / 150) % 2);
+  else if (lockoutRemainingSec() &gt; 0) digitalWrite(PIN_LED_YELLOW, (t / 500) % 2);
+  else digitalWrite(PIN_LED_YELLOW, motion ? HIGH : LOW);
+}
+
+// ================= CẢM BIẾN &amp; NÚT NHẤN =================
+bool readDoorOpen() {
+  // Module tránh vật cản: OUT = LOW khi thấy vật cản (cánh cửa) -&gt; cửa đóng
+  return digitalRead(PIN_DOOR_IR) == HIGH;
+}
+
+void readSensors() {
+  bool m = digitalRead(PIN_PIR) == HIGH;
+  if (m &amp;&amp; !motion) addLog("Phát hiện người trước cửa");
+  motion = m;
+  if (motion) touch();
+
+  if (!USE_DOOR_SENSOR) return;
+  bool open = readDoorOpen();
+  if (open == doorOpen) return;
+  doorOpen = open;
+  addLog(open ? "Cửa mở" : "Cửa đóng");
+  touch();
+  if (open &amp;&amp; isLocked) startAlarm("cửa bị mở khi đang khóa");
+}
+
+bool pressed(Button&amp; b) {
+  bool now = digitalRead(b.pin);
+  if (now != b.last &amp;&amp; millis() - b.changedAt &gt; 50) {
+    b.changedAt = millis();
+    b.last = now;
+    return now == LOW;
   }
+  return false;
+}
+
+void handleButtons() {
+  if (pressed(btnExit)) {
+    unlockDoor("nút EXIT");
+    playSuccess();
+  }
+  if (pressed(btnLock)) {
+    stopAlarm();
+    lockDoor("nút LOCK");
+    playClick();
+  }
+}
+
+// ================= OLED =================
+void drawOled() {
+  if (!oledOk) return;
+
+  bool idle = isLocked &amp;&amp; !alarmOn &amp;&amp; lockoutRemainingSec() == 0;
+  if (idle &amp;&amp; millis() - lastActivity &gt; SCREEN_TIMEOUT_MS) {
+    if (screenOn) {
+      display.ssd1306_command(SSD1306_DISPLAYOFF);
+      screenOn = false;
+    }
+    return;
+  }
+  if (!screenOn) {
+    display.ssd1306_command(SSD1306_DISPLAYON);
+    screenOn = true;
+  }
+
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.print("SMART LOCK");
+  if (USE_DOOR_SENSOR) {
+    display.setCursor(80, 0);
+    display.print(doorOpen ? "Cua:MO" : "Cua:DONG");
+  }
+  display.drawLine(0, 10, 127, 10, SSD1306_WHITE);
+
+  display.setTextSize(2);
+  display.setCursor(0, 16);
+  unsigned long remain = lockoutRemainingSec();
+  if (alarmOn) {
+    display.print("! ALARM !");
+  } else if (remain &gt; 0) {
+    display.print("WAIT ");
+    display.print(remain);
+    display.print("s");
+  } else {
+    display.print(isLocked ? "LOCKED" : "OPEN");
+  }
+
+  display.setTextSize(1);
+  display.setCursor(0, 40);
+  if (oledMsg.length() &amp;&amp; millis() - oledMsgAt &lt; OLED_MSG_MS) {
+    display.print(oledMsg);
+  } else if (motion &amp;&amp; isLocked) {
+    display.print("Moi nhap ma PIN...");
+  } else {
+    display.print("WiFi: ");
+    display.print(AP_SSID);
+  }
+  display.setCursor(0, 54);
+  display.print("http://");
+  display.print(WiFi.softAPIP());
+  display.display();
 }
 
 // ================= HTTP HANDLERS =================
@@ -648,17 +1021,31 @@ void sendJson(bool ok, const String&amp; msg) {
   server.send(200, "application/json", "{\"ok\":" + String(ok ? "true" : "false") + ",\"msg\":\"" + msg + "\"}");
 }
 
+String jsonBool(bool v) {
+  return v ? "true" : "false";
+}
+
 void handleRoot() {
   server.send_P(200, "text/html", PAGE_HTML);
 }
 
 void handleStatus() {
-  String json = "{\"locked\":" + String(isLocked ? "true" : "false") +
-                ",\"lockout\":" + String(lockoutRemainingSec()) + "}";
+  String json = "{\"locked\":" + jsonBool(isLocked) +
+                ",\"lockout\":" + String(lockoutRemainingSec()) +
+                ",\"door\":" + jsonBool(USE_DOOR_SENSOR &amp;&amp; doorOpen) +
+                ",\"motion\":" + jsonBool(motion) +
+                ",\"alarm\":" + jsonBool(alarmOn) +
+                ",\"log\":[";
+  for (int i = 0; i &lt; logCount; i++) {
+    if (i) json += ",";
+    json += "\"" + logs[i] + "\"";
+  }
+  json += "]}";
   server.send(200, "application/json", json);
 }
 
 void handleUnlock() {
+  touch();
   unsigned long remain = lockoutRemainingSec();
   if (remain &gt; 0) {
     sendJson(false, "Sai quá nhiều lần! Thử lại sau " + String(remain) + "s");
@@ -673,30 +1060,37 @@ void handleUnlock() {
   }
 
   if (safeEquals(pin, currentPin)) {
-    failCount = 0;
-    unlockDoor();
+    unlockDoor("PIN trên web");
     sendJson(true, "Mở khóa thành công!");
-  } else {
-    failCount++;
-    Serial.printf("[WARN] Sai PIN lan %d\n", failCount);
-    wrongPinAlert();
-    if (failCount &gt;= MAX_FAILS) {
-      failCount = 0;
-      lockedOut = true;
-      lockoutStart = millis();
-      sendJson(false, "Sai " + String(MAX_FAILS) + " lần! Tạm khóa " + String(LOCKOUT_MS / 1000) + "s");
-    } else {
-      sendJson(false, "Sai PIN! Còn " + String(MAX_FAILS - failCount) + " lần thử");
-    }
+    playSuccess();
+    return;
   }
+
+  failCount++;
+  addLog("Sai PIN lần " + String(failCount));
+  if (failCount &gt;= MAX_FAILS) {
+    failCount = 0;
+    lockedOut = true;
+    lockoutStart = millis();
+    showMsg("Sai PIN qua 3 lan!");
+    startAlarm("sai PIN " + String(MAX_FAILS) + " lần");
+    sendJson(false, "Sai " + String(MAX_FAILS) + " lần! Tạm khóa " + String(LOCKOUT_MS / 1000) + "s");
+  } else {
+    showMsg("Sai PIN! " + String(failCount) + "/" + String(MAX_FAILS));
+    sendJson(false, "Sai PIN! Còn " + String(MAX_FAILS - failCount) + " lần thử");
+  }
+  playFail();
 }
 
+// Khóa từ web KHÔNG tắt được báo động: chỉ PIN đúng hoặc nút trong nhà mới tắt được
 void handleLock() {
-  lockDoor();
+  touch();
+  lockDoor("web");
   sendJson(true, "Đã khóa cửa");
 }
 
 void handleChangePin() {
+  touch();
   String oldPin = server.arg("old");
   String newPin = server.arg("new");
   oldPin.trim();
@@ -707,6 +1101,7 @@ void handleChangePin() {
     return;
   }
   if (!safeEquals(oldPin, currentPin)) {
+    addLog("Đổi PIN thất bại (sai PIN cũ)");
     sendJson(false, "PIN cũ không đúng");
     return;
   }
@@ -717,7 +1112,8 @@ void handleChangePin() {
 
   currentPin = newPin;
   prefs.putString("pin", currentPin);
-  Serial.println("[INFO] Da doi PIN");
+  addLog("Đã đổi PIN");
+  showMsg("Da doi PIN");
   sendJson(true, "Đổi PIN thành công!");
 }
 
@@ -725,18 +1121,28 @@ void handleChangePin() {
 void setup() {
   Serial.begin(115200);
 
-  pinMode(RELAY_PIN, OUTPUT);
-  pinMode(LED_GREEN, OUTPUT);
-  pinMode(LED_RED, OUTPUT);
-  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(PIN_RELAY_LOCK, OUTPUT);
+  pinMode(PIN_RELAY_ALARM, OUTPUT);
+  setRelay(PIN_RELAY_LOCK, false);
+  setRelay(PIN_RELAY_ALARM, false);
+  pinMode(PIN_LED_GREEN, OUTPUT);
+  pinMode(PIN_LED_YELLOW, OUTPUT);
+  pinMode(PIN_LED_RED, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
+  pinMode(PIN_BTN_EXIT, INPUT_PULLUP);
+  pinMode(PIN_BTN_LOCK, INPUT_PULLUP);
+  pinMode(PIN_DOOR_IR, INPUT);
+  pinMode(PIN_PIR, INPUT);
 
-  lockServo.setPeriodHertz(50);
-  lockServo.attach(SERVO_PIN, 500, 2400);
+  Wire.begin(21, 22);
+  oledOk = display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
+  if (!oledOk) Serial.println("[WARN] Khong tim thay OLED (thu doi dia chi 0x3D)");
 
   prefs.begin("smartlock", false);
   currentPin = prefs.getString("pin", DEFAULT_PIN);
 
-  lockDoor();
+  if (USE_DOOR_SENSOR) doorOpen = readDoorOpen();
+  lockDoor("khởi động");
 
   WiFi.softAP(AP_SSID, AP_PASS);
   Serial.print("WiFi: ");
@@ -750,13 +1156,28 @@ void setup() {
   server.on("/lock", HTTP_POST, handleLock);
   server.on("/changepin", HTTP_POST, handleChangePin);
   server.begin();
+
+  touch();
 }
 
 void loop() {
   server.handleClient();
+  handleButtons();
+  readSensors();
 
-  if (!isLocked &amp;&amp; millis() - unlockedAt &gt;= AUTO_LOCK_MS) {
-    lockDoor();
+  // Tự khóa lại khi hết thời gian VÀ cửa đã đóng
+  if (!isLocked &amp;&amp; millis() - unlockedAt &gt;= AUTO_LOCK_MS &amp;&amp; !(USE_DOOR_SENSOR &amp;&amp; doorOpen)) {
+    lockDoor("tự động");
+  }
+
+  if (alarmOn &amp;&amp; millis() - alarmStart &gt;= ALARM_MS) stopAlarm();
+
+  updateYellowLed();
+
+  static unsigned long lastDraw = 0;
+  if (millis() - lastDraw &gt;= 200) {
+    lastDraw = millis();
+    drawOled();
   }
 }
 </code></pre>
