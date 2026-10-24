@@ -1,67 +1,65 @@
 /*
  * KHÓA CỬA THÔNG MINH - NHẬP PIN TRÊN WEB (ESP32)
- * Dùng đúng linh kiện trong bộ kit ESP32 starter:
+ * Lắp KHÔNG cần breadboard, KHÔNG cần OLED / còi:
  *   - Relay kênh 1 : chốt khóa cửa (relay đóng = mở khóa)
- *   - Relay kênh 2 : bật còi báo động (active buzzer)
- *   - OLED 0.96"   : hiển thị trạng thái
- *   - LED xanh/vàng/đỏ : mở khóa / cảnh báo / đang khóa
- *   - Còi thụ động : âm báo đúng/sai PIN
- *   - 2 nút nhấn   : EXIT (mở từ trong nhà), LOCK (khóa ngay + tắt báo động)
- *   - PIR HC-SR501 : phát hiện có người trước cửa -> bật màn hình
- *   - Cảm biến tránh vật cản (IR): cảm biến cửa đóng/mở
+ *   - Relay kênh 2 : đầu ra báo động (bật trong lúc báo động)
+ *   - LED xanh     : đã mở khóa / nháy khi nhập đúng PIN
+ *   - LED đỏ       : đang khóa / nháy khi sai PIN / nháy nhanh khi báo động
+ *   - LED vàng     : (tùy chọn) có người trước cửa hoặc đang tạm khóa
+ *   - 2 nút nhấn   : (tùy chọn) EXIT mở từ trong nhà, LOCK khóa ngay + tắt báo động
+ *   - PIR HC-SR501 : (tùy chọn) phát hiện có người trước cửa
+ *   - Cảm biến tránh vật cản (IR): (tùy chọn) cảm biến cửa đóng/mở
+ *   - Màn hình: hiển thị trên WEB, trang /screen dùng cho điện thoại / tablet gắn ở cửa
  *
- * Luồng chính: điện thoại kết nối WiFi "SmartLock-ESP32" -> mở http://192.168.4.1
- * -> nhập PIN -> đúng thì mở khóa, tự khóa lại khi hết 5s và cửa đã đóng.
- * Sai 3 lần -> tạm khóa 30s + báo động. Mở cửa khi đang khóa -> báo động đột nhập.
+ * "GND phụ": vì không có breadboard, mỗi LED / nút nhấn / PIR được nối vào một
+ * GPIO đặt mức LOW để làm chân GND riêng (chỉ dùng cho tải dòng nhỏ < 20mA).
  *
- * Thư viện cần cài: Adafruit SSD1306, Adafruit GFX Library
- * Board: ESP32 Dev Module
+ * Không cần cài thêm thư viện. Board: ESP32 Dev Module
  */
 
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Preferences.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 
 // ===== WiFi do ESP32 tự phát =====
 const char* AP_SSID = "SmartLock-ESP32";
 const char* AP_PASS = "12345678";  // tối thiểu 8 ký tự
 
-// ===== Chân kết nối =====
-// OLED: SDA = GPIO 21, SCL = GPIO 22 (I2C mặc định)
-const int PIN_RELAY_LOCK  = 26;  // Relay IN1
-const int PIN_RELAY_ALARM = 27;  // Relay IN2
-const int PIN_LED_GREEN   = 18;
-const int PIN_LED_YELLOW  = 19;
-const int PIN_LED_RED     = 23;
-const int PIN_BUZZER      = 25;  // còi thụ động
-const int PIN_BTN_EXIT    = 32;
-const int PIN_BTN_LOCK    = 33;
-const int PIN_DOOR_IR     = 34;  // OUT cảm biến tránh vật cản
-const int PIN_PIR         = 35;  // OUT cảm biến PIR
+// ===== Chân kết nối (nhãn in trên board trong ngoặc) =====
+const int PIN_RELAY_LOCK  = 26;  // (D26) Relay IN1
+const int PIN_RELAY_ALARM = 27;  // (D27) Relay IN2
+const int PIN_LED_RED     = 23;  // (D23) LED đỏ (+) qua 220Ω
+const int PIN_LED_GREEN   = 18;  // (D18) LED xanh (+) qua 220Ω
+const int PIN_LED_YELLOW  = 17;  // (TX2) LED vàng (+) qua 220Ω
+const int PIN_BTN_EXIT    = 32;  // (D32) Nút EXIT
+const int PIN_BTN_LOCK    = 13;  // (D13) Nút LOCK
+const int PIN_DOOR_IR     = 34;  // (D34) OUT cảm biến tránh vật cản
+const int PIN_PIR         = 35;  // (D35) OUT cảm biến PIR
 
-const bool RELAY_ACTIVE_LOW = true;  // đa số module relay kích mức LOW
-const bool USE_DOOR_SENSOR  = true;  // đặt false nếu chưa lắp cảm biến cửa
+// GND phụ: các chân này luôn ở mức LOW
+const int GND_PINS[] = {
+  22,  // (D22) LED đỏ (−)
+  19,  // (D19) LED xanh (−)
+  16,  // (RX2) LED vàng (−)
+  33,  // (D33) Nút EXIT
+  14,  // (D14) Nút LOCK
+  4,   // (D4)  PIR GND
+};
+
+const bool RELAY_ACTIVE_LOW = true;   // đa số module relay kích mức LOW
+const bool USE_DOOR_SENSOR  = false;  // đổi thành true sau khi lắp cảm biến cửa (IR)
+const bool USE_PIR          = false;  // đổi thành true sau khi lắp PIR
 
 // ===== Thông số =====
 const char* DEFAULT_PIN = "1234";
-const int MAX_FAILS                   = 3;
-const unsigned long LOCKOUT_MS        = 30000;
-const unsigned long AUTO_LOCK_MS      = 5000;
-const unsigned long ALARM_MS          = 15000;
-const unsigned long SCREEN_TIMEOUT_MS = 30000;
-const unsigned long OLED_MSG_MS       = 3000;
-
-// ===== OLED =====
-const int OLED_W = 128;
-const int OLED_H = 64;
-const uint8_t OLED_ADDR = 0x3C;  // một số màn hình dùng 0x3D
+const int MAX_FAILS               = 3;
+const unsigned long LOCKOUT_MS    = 30000;
+const unsigned long AUTO_LOCK_MS  = 5000;
+const unsigned long ALARM_MS      = 15000;
+const unsigned long SCREEN_MSG_MS = 4000;
 
 WebServer server(80);
 Preferences prefs;
-Adafruit_SSD1306 display(OLED_W, OLED_H, &Wire, -1);
 
 // ===== Trạng thái =====
 String currentPin;
@@ -75,11 +73,8 @@ unsigned long alarmStart = 0;
 bool doorOpen = false;
 bool motion = false;
 
-bool oledOk = false;
-bool screenOn = true;
-unsigned long lastActivity = 0;
-String oledMsg;
-unsigned long oledMsgAt = 0;
+String screenMsg;
+unsigned long screenMsgAt = 0;
 
 struct Button {
   int pin;
@@ -95,6 +90,7 @@ String logs[LOG_SIZE];
 int logCount = 0;
 
 // ================= GIAO DIỆN WEB =================
+// Một trang dùng cho 2 chế độ: "/" = màn hình + bàn phím, "/screen" = chỉ màn hình
 const char PAGE_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="vi">
@@ -104,11 +100,16 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
 <title>Smart Lock</title>
 <style>
   body{font-family:sans-serif;background:#1e1e2e;color:#fff;text-align:center;margin:0;padding:16px}
-  h2{margin:6px 0}
-  .chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:320px;margin:10px auto}
-  .chip{padding:8px;border-radius:10px;background:#33334d;font-size:14px}
-  .red{background:#8e2b20}.green{background:#1d7a44}.yellow{background:#9a6b00}
-  #dots{font-size:32px;letter-spacing:8px;height:44px;margin:10px 0}
+  .screen{background:#000;border:6px solid #2a2a3a;border-radius:14px;max-width:340px;margin:0 auto 14px;
+    padding:12px 14px;font-family:monospace;color:#7fd3ff;text-align:left}
+  .row{display:flex;justify-content:space-between;font-size:13px}
+  .line{border-top:1px solid #1f4a66;margin:6px 0}
+  #big{font-size:34px;font-weight:bold;text-align:center;margin:10px 0;letter-spacing:2px}
+  #smsg{min-height:20px;text-align:center;font-size:15px;color:#fff}
+  .c-red{color:#ff5c5c}.c-green{color:#4cd964}.c-yellow{color:#ffcc00}
+  .blink{animation:bl .4s steps(1) infinite}
+  @keyframes bl{50%{opacity:0}}
+  #dots{font-size:32px;letter-spacing:8px;height:44px;margin:6px 0}
   .pad{display:grid;grid-template-columns:repeat(3,76px);gap:12px;justify-content:center}
   .pad button{height:68px;font-size:26px;border:none;border-radius:50%;background:#33334d;color:#fff}
   .pad button:active{background:#55557a}
@@ -120,45 +121,56 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
   .btn{padding:10px 20px;border:none;border-radius:8px;background:#4a6cf7;color:#fff;font-size:16px;margin:6px}
   #log{list-style:none;padding:0;max-width:340px;margin:8px auto;text-align:left;font-size:13px;color:#c9c9d9}
   #log li{padding:4px 0;border-bottom:1px solid #33334d}
+  body.screen-only{padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
+  body.screen-only .screen{max-width:none;width:92vw;margin:0}
+  body.screen-only #big{font-size:15vw}
+  body.screen-only #smsg{font-size:5vw;min-height:7vw}
+  body.screen-only .row{font-size:4vw}
+  body.screen-only .ctrl{display:none}
 </style>
 </head>
 <body>
-  <h2>🔐 Smart Lock</h2>
-  <div class="chips">
-    <div id="cLock" class="chip">...</div>
-    <div id="cDoor" class="chip">...</div>
-    <div id="cMotion" class="chip">...</div>
-    <div id="cAlarm" class="chip">...</div>
+  <div class="screen">
+    <div class="row"><span>SMART LOCK</span><span id="sDoor">--</span></div>
+    <div class="line"></div>
+    <div id="big">...</div>
+    <div id="smsg"></div>
+    <div class="line"></div>
+    <div class="row"><span id="sMotion">--</span><span id="sAlarm">--</span></div>
   </div>
-  <div id="dots">----</div>
-  <div class="pad">
-    <button onclick="press(1)">1</button><button onclick="press(2)">2</button><button onclick="press(3)">3</button>
-    <button onclick="press(4)">4</button><button onclick="press(5)">5</button><button onclick="press(6)">6</button>
-    <button onclick="press(7)">7</button><button onclick="press(8)">8</button><button onclick="press(9)">9</button>
-    <button class="clr" onclick="clr()">C</button><button onclick="press(0)">0</button><button class="ok" onclick="send()">OK</button>
+
+  <div class="ctrl">
+    <div id="dots">----</div>
+    <div class="pad">
+      <button onclick="press(1)">1</button><button onclick="press(2)">2</button><button onclick="press(3)">3</button>
+      <button onclick="press(4)">4</button><button onclick="press(5)">5</button><button onclick="press(6)">6</button>
+      <button onclick="press(7)">7</button><button onclick="press(8)">8</button><button onclick="press(9)">9</button>
+      <button class="clr" onclick="clr()">C</button><button onclick="press(0)">0</button><button class="ok" onclick="send()">OK</button>
+    </div>
+    <div id="msg"></div>
+    <button class="btn" onclick="lockNow()">Khóa ngay</button>
+
+    <details>
+      <summary>Đổi mã PIN</summary>
+      <input id="oldPin" type="password" inputmode="numeric" placeholder="PIN cũ"><br>
+      <input id="newPin" type="password" inputmode="numeric" placeholder="PIN mới (4-8 số)"><br>
+      <button class="btn" onclick="changePin()">Lưu</button>
+    </details>
+
+    <details open>
+      <summary>Nhật ký</summary>
+      <ul id="log"></ul>
+    </details>
   </div>
-  <div id="msg"></div>
-  <button class="btn" onclick="lockNow()">Khóa ngay</button>
-
-  <details>
-    <summary>Đổi mã PIN</summary>
-    <input id="oldPin" type="password" inputmode="numeric" placeholder="PIN cũ"><br>
-    <input id="newPin" type="password" inputmode="numeric" placeholder="PIN mới (4-8 số)"><br>
-    <button class="btn" onclick="changePin()">Lưu</button>
-  </details>
-
-  <details open>
-    <summary>Nhật ký</summary>
-    <ul id="log"></ul>
-  </details>
 
 <script>
+if(location.pathname === '/screen') document.body.classList.add('screen-only');
 let pin = '';
-function show(){ document.getElementById('dots').textContent = pin.length ? '●'.repeat(pin.length) : '----'; }
+function $(id){ return document.getElementById(id); }
+function show(){ $('dots').textContent = pin.length ? '●'.repeat(pin.length) : '----'; }
 function press(k){ if(pin.length < 8){ pin += k; show(); } }
 function clr(){ pin = ''; show(); }
-function msg(t, ok){ const m = document.getElementById('msg'); m.textContent = t; m.className = ok ? 'ok-msg' : 'err-msg'; }
-function chip(id, text, cls){ const c = document.getElementById(id); c.textContent = text; c.className = 'chip ' + cls; }
+function msg(t, ok){ $('msg').textContent = t; $('msg').className = ok ? 'ok-msg' : 'err-msg'; }
 
 async function post(url, data){
   const r = await fetch(url, {method:'POST',
@@ -173,20 +185,26 @@ async function send(){
 }
 async function lockNow(){ const j = await post('/lock', {}); msg(j.msg, j.ok); refresh(); }
 async function changePin(){
-  const o = document.getElementById('oldPin'), n = document.getElementById('newPin');
+  const o = $('oldPin'), n = $('newPin');
   const j = await post('/changepin', {old:o.value, new:n.value});
   msg(j.msg, j.ok); o.value = ''; n.value = '';
 }
+function big(text, cls){ $('big').textContent = text; $('big').className = cls; }
 async function refresh(){
   try{
     const j = await (await fetch('/status')).json();
-    if(j.lockout > 0) chip('cLock', '⛔ Tạm khóa ' + j.lockout + 's', 'yellow');
-    else chip('cLock', j.locked ? '🔒 Đang khóa' : '🔓 Đã mở', j.locked ? 'red' : 'green');
-    chip('cDoor', j.door ? '🚪 Cửa mở' : '🚪 Cửa đóng', j.door ? 'yellow' : '');
-    chip('cMotion', j.motion ? '🚶 Có người' : '🚶 Không có ai', j.motion ? 'yellow' : '');
-    chip('cAlarm', j.alarm ? '🚨 BÁO ĐỘNG' : '🔕 Bình thường', j.alarm ? 'red' : '');
-    document.getElementById('log').innerHTML = j.log.map(l => '<li>' + l + '</li>').join('');
-  }catch(e){}
+    if(j.alarm) big('! ALARM !', 'c-red blink');
+    else if(j.lockout > 0) big('WAIT ' + j.lockout + 's', 'c-yellow');
+    else if(j.locked) big('LOCKED', 'c-red');
+    else big('OPEN', 'c-green');
+    $('smsg').textContent = j.msg || (j.motion && j.locked ? 'Mời nhập mã PIN...' : '');
+    $('sDoor').textContent = !j.hasDoor ? '🚪 Cửa: --' : (j.door ? '🚪 Cửa: MỞ' : '🚪 Cửa: ĐÓNG');
+    $('sMotion').textContent = !j.hasPir ? '🚶 --' : (j.motion ? '🚶 Có người' : '🚶 Không có ai');
+    $('sAlarm').textContent = j.alarm ? '🚨 BÁO ĐỘNG' : '🔕 Bình thường';
+    $('log').innerHTML = j.log.map(l => '<li>' + l + '</li>').join('');
+  }catch(e){
+    big('MẤT KẾT NỐI', 'c-yellow');
+  }
 }
 show(); refresh(); setInterval(refresh, 1000);
 </script>
@@ -209,15 +227,10 @@ void addLog(const String& msg) {
   Serial.println(logs[0]);
 }
 
-void touch() {
-  lastActivity = millis();
-}
-
-// Thông báo ngắn trên OLED (chỉ ASCII, không dấu)
+// Thông báo ngắn hiện trên màn hình web trong vài giây
 void showMsg(const String& m) {
-  oledMsg = m;
-  oledMsgAt = millis();
-  touch();
+  screenMsg = m;
+  screenMsgAt = millis();
 }
 
 // ================= XỬ LÝ CHUỖI / BẢO MẬT =================
@@ -252,26 +265,20 @@ void setRelay(int pin, bool on) {
   digitalWrite(pin, (on ^ RELAY_ACTIVE_LOW) ? HIGH : LOW);
 }
 
-void playSuccess() {
-  tone(PIN_BUZZER, 1047, 120); delay(140);
-  tone(PIN_BUZZER, 1319, 120); delay(140);
-  tone(PIN_BUZZER, 1568, 200); delay(220);
-  noTone(PIN_BUZZER);
-}
-
-void playFail() {
-  for (int i = 0; i < 2; i++) {
-    digitalWrite(PIN_LED_RED, LOW);
-    tone(PIN_BUZZER, 300, 180); delay(200);
-    digitalWrite(PIN_LED_RED, HIGH);
-    delay(120);
+// PIN đúng: LED xanh nháy 3 lần
+void flashSuccess() {
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(PIN_LED_GREEN, LOW);  delay(80);
+    digitalWrite(PIN_LED_GREEN, HIGH); delay(80);
   }
-  noTone(PIN_BUZZER);
 }
 
-void playClick() {
-  tone(PIN_BUZZER, 880, 80); delay(100);
-  noTone(PIN_BUZZER);
+// PIN sai: LED đỏ nháy 3 lần
+void flashFail() {
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(PIN_LED_RED, LOW);  delay(120);
+    digitalWrite(PIN_LED_RED, HIGH); delay(120);
+  }
 }
 
 void startAlarm(const String& reason) {
@@ -279,7 +286,6 @@ void startAlarm(const String& reason) {
   alarmOn = true;
   alarmStart = millis();
   setRelay(PIN_RELAY_ALARM, true);
-  touch();
 }
 
 void stopAlarm() {
@@ -292,10 +298,8 @@ void stopAlarm() {
 void lockDoor(const String& source) {
   isLocked = true;
   setRelay(PIN_RELAY_LOCK, false);
-  digitalWrite(PIN_LED_GREEN, LOW);
-  digitalWrite(PIN_LED_RED, HIGH);
   addLog("Khóa cửa (" + source + ")");
-  showMsg("Da khoa cua");
+  showMsg("Đã khóa cửa");
 }
 
 void unlockDoor(const String& source) {
@@ -304,18 +308,23 @@ void unlockDoor(const String& source) {
   failCount = 0;
   stopAlarm();
   setRelay(PIN_RELAY_LOCK, true);
-  digitalWrite(PIN_LED_GREEN, HIGH);
-  digitalWrite(PIN_LED_RED, LOW);
   addLog("Mở khóa (" + source + ")");
-  showMsg("Moi vao!");
+  showMsg("Mời vào!");
 }
 
-// LED vàng: nháy nhanh khi báo động, nháy chậm khi tạm khóa, sáng khi có người
-void updateYellowLed() {
+// LED đỏ : báo động = nháy nhanh, tạm khóa = nháy chậm, đang khóa = sáng, đã mở = tắt
+// LED xanh: sáng khi đã mở khóa
+// LED vàng: sáng khi có người trước cửa hoặc đang tạm khóa
+void updateLeds() {
   unsigned long t = millis();
-  if (alarmOn) digitalWrite(PIN_LED_YELLOW, (t / 150) % 2);
-  else if (lockoutRemainingSec() > 0) digitalWrite(PIN_LED_YELLOW, (t / 500) % 2);
-  else digitalWrite(PIN_LED_YELLOW, motion ? HIGH : LOW);
+  bool inLockout = lockoutRemainingSec() > 0;
+  bool red;
+  if (alarmOn) red = (t / 150) % 2;
+  else if (inLockout) red = (t / 500) % 2;
+  else red = isLocked;
+  digitalWrite(PIN_LED_RED, red);
+  digitalWrite(PIN_LED_GREEN, !isLocked);
+  digitalWrite(PIN_LED_YELLOW, motion || inLockout);
 }
 
 // ================= CẢM BIẾN & NÚT NHẤN =================
@@ -325,18 +334,21 @@ bool readDoorOpen() {
 }
 
 void readSensors() {
-  bool m = digitalRead(PIN_PIR) == HIGH;
-  if (m && !motion) addLog("Phát hiện người trước cửa");
-  motion = m;
-  if (motion) touch();
+  if (USE_PIR) {
+    bool m = digitalRead(PIN_PIR) == HIGH;
+    if (m && !motion) addLog("Phát hiện người trước cửa");
+    motion = m;
+  }
 
   if (!USE_DOOR_SENSOR) return;
   bool open = readDoorOpen();
   if (open == doorOpen) return;
   doorOpen = open;
   addLog(open ? "Cửa mở" : "Cửa đóng");
-  touch();
-  if (open && isLocked) startAlarm("cửa bị mở khi đang khóa");
+  if (open && isLocked) {
+    showMsg("Cửa bị mở trái phép!");
+    startAlarm("cửa bị mở khi đang khóa");
+  }
 }
 
 bool pressed(Button& b) {
@@ -352,71 +364,13 @@ bool pressed(Button& b) {
 void handleButtons() {
   if (pressed(btnExit)) {
     unlockDoor("nút EXIT");
-    playSuccess();
+    updateLeds();
+    flashSuccess();
   }
   if (pressed(btnLock)) {
     stopAlarm();
     lockDoor("nút LOCK");
-    playClick();
   }
-}
-
-// ================= OLED =================
-void drawOled() {
-  if (!oledOk) return;
-
-  bool idle = isLocked && !alarmOn && lockoutRemainingSec() == 0;
-  if (idle && millis() - lastActivity > SCREEN_TIMEOUT_MS) {
-    if (screenOn) {
-      display.ssd1306_command(SSD1306_DISPLAYOFF);
-      screenOn = false;
-    }
-    return;
-  }
-  if (!screenOn) {
-    display.ssd1306_command(SSD1306_DISPLAYON);
-    screenOn = true;
-  }
-
-  display.clearDisplay();
-  display.setTextColor(SSD1306_WHITE);
-
-  display.setTextSize(1);
-  display.setCursor(0, 0);
-  display.print("SMART LOCK");
-  if (USE_DOOR_SENSOR) {
-    display.setCursor(80, 0);
-    display.print(doorOpen ? "Cua:MO" : "Cua:DONG");
-  }
-  display.drawLine(0, 10, 127, 10, SSD1306_WHITE);
-
-  display.setTextSize(2);
-  display.setCursor(0, 16);
-  unsigned long remain = lockoutRemainingSec();
-  if (alarmOn) {
-    display.print("! ALARM !");
-  } else if (remain > 0) {
-    display.print("WAIT ");
-    display.print(remain);
-    display.print("s");
-  } else {
-    display.print(isLocked ? "LOCKED" : "OPEN");
-  }
-
-  display.setTextSize(1);
-  display.setCursor(0, 40);
-  if (oledMsg.length() && millis() - oledMsgAt < OLED_MSG_MS) {
-    display.print(oledMsg);
-  } else if (motion && isLocked) {
-    display.print("Moi nhap ma PIN...");
-  } else {
-    display.print("WiFi: ");
-    display.print(AP_SSID);
-  }
-  display.setCursor(0, 54);
-  display.print("http://");
-  display.print(WiFi.softAPIP());
-  display.display();
 }
 
 // ================= HTTP HANDLERS =================
@@ -433,11 +387,15 @@ void handleRoot() {
 }
 
 void handleStatus() {
+  bool msgActive = screenMsg.length() && millis() - screenMsgAt < SCREEN_MSG_MS;
   String json = "{\"locked\":" + jsonBool(isLocked) +
                 ",\"lockout\":" + String(lockoutRemainingSec()) +
-                ",\"door\":" + jsonBool(USE_DOOR_SENSOR && doorOpen) +
+                ",\"hasDoor\":" + jsonBool(USE_DOOR_SENSOR) +
+                ",\"door\":" + jsonBool(doorOpen) +
+                ",\"hasPir\":" + jsonBool(USE_PIR) +
                 ",\"motion\":" + jsonBool(motion) +
                 ",\"alarm\":" + jsonBool(alarmOn) +
+                ",\"msg\":\"" + (msgActive ? screenMsg : "") + "\"" +
                 ",\"log\":[";
   for (int i = 0; i < logCount; i++) {
     if (i) json += ",";
@@ -448,7 +406,6 @@ void handleStatus() {
 }
 
 void handleUnlock() {
-  touch();
   unsigned long remain = lockoutRemainingSec();
   if (remain > 0) {
     sendJson(false, "Sai quá nhiều lần! Thử lại sau " + String(remain) + "s");
@@ -465,7 +422,8 @@ void handleUnlock() {
   if (safeEquals(pin, currentPin)) {
     unlockDoor("PIN trên web");
     sendJson(true, "Mở khóa thành công!");
-    playSuccess();
+    updateLeds();
+    flashSuccess();
     return;
   }
 
@@ -475,25 +433,23 @@ void handleUnlock() {
     failCount = 0;
     lockedOut = true;
     lockoutStart = millis();
-    showMsg("Sai PIN qua 3 lan!");
+    showMsg("Sai PIN quá 3 lần!");
     startAlarm("sai PIN " + String(MAX_FAILS) + " lần");
     sendJson(false, "Sai " + String(MAX_FAILS) + " lần! Tạm khóa " + String(LOCKOUT_MS / 1000) + "s");
   } else {
     showMsg("Sai PIN! " + String(failCount) + "/" + String(MAX_FAILS));
     sendJson(false, "Sai PIN! Còn " + String(MAX_FAILS - failCount) + " lần thử");
   }
-  playFail();
+  flashFail();
 }
 
 // Khóa từ web KHÔNG tắt được báo động: chỉ PIN đúng hoặc nút trong nhà mới tắt được
 void handleLock() {
-  touch();
   lockDoor("web");
   sendJson(true, "Đã khóa cửa");
 }
 
 void handleChangePin() {
-  touch();
   String oldPin = server.arg("old");
   String newPin = server.arg("new");
   oldPin.trim();
@@ -516,13 +472,18 @@ void handleChangePin() {
   currentPin = newPin;
   prefs.putString("pin", currentPin);
   addLog("Đã đổi PIN");
-  showMsg("Da doi PIN");
+  showMsg("Đã đổi PIN");
   sendJson(true, "Đổi PIN thành công!");
 }
 
 // ================= SETUP / LOOP =================
 void setup() {
   Serial.begin(115200);
+
+  for (int pin : GND_PINS) {
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, LOW);
+  }
 
   pinMode(PIN_RELAY_LOCK, OUTPUT);
   pinMode(PIN_RELAY_ALARM, OUTPUT);
@@ -531,15 +492,10 @@ void setup() {
   pinMode(PIN_LED_GREEN, OUTPUT);
   pinMode(PIN_LED_YELLOW, OUTPUT);
   pinMode(PIN_LED_RED, OUTPUT);
-  pinMode(PIN_BUZZER, OUTPUT);
   pinMode(PIN_BTN_EXIT, INPUT_PULLUP);
   pinMode(PIN_BTN_LOCK, INPUT_PULLUP);
   pinMode(PIN_DOOR_IR, INPUT);
   pinMode(PIN_PIR, INPUT);
-
-  Wire.begin(21, 22);
-  oledOk = display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
-  if (!oledOk) Serial.println("[WARN] Khong tim thay OLED (thu doi dia chi 0x3D)");
 
   prefs.begin("smartlock", false);
   currentPin = prefs.getString("pin", DEFAULT_PIN);
@@ -550,17 +506,19 @@ void setup() {
   WiFi.softAP(AP_SSID, AP_PASS);
   Serial.print("WiFi: ");
   Serial.println(AP_SSID);
-  Serial.print("Mo trinh duyet: http://");
+  Serial.print("Ban phim:   http://");
   Serial.println(WiFi.softAPIP());
+  Serial.print("Man hinh:   http://");
+  Serial.print(WiFi.softAPIP());
+  Serial.println("/screen");
 
   server.on("/", HTTP_GET, handleRoot);
+  server.on("/screen", HTTP_GET, handleRoot);
   server.on("/status", HTTP_GET, handleStatus);
   server.on("/unlock", HTTP_POST, handleUnlock);
   server.on("/lock", HTTP_POST, handleLock);
   server.on("/changepin", HTTP_POST, handleChangePin);
   server.begin();
-
-  touch();
 }
 
 void loop() {
@@ -575,11 +533,5 @@ void loop() {
 
   if (alarmOn && millis() - alarmStart >= ALARM_MS) stopAlarm();
 
-  updateYellowLed();
-
-  static unsigned long lastDraw = 0;
-  if (millis() - lastDraw >= 200) {
-    lastDraw = millis();
-    drawOled();
-  }
+  updateLeds();
 }
