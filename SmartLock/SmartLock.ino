@@ -511,6 +511,10 @@ void setup() {
   Serial.print("Man hinh:   http://");
   Serial.print(WiFi.softAPIP());
   Serial.println("/screen");
+  Serial.print("Cam bien cua (IR): ");
+  Serial.println(USE_DOOR_SENSOR ? "BAT" : "TAT");
+  Serial.print("Cam bien PIR: ");
+  Serial.println(USE_PIR ? "BAT" : "TAT");
 
   server.on("/", HTTP_GET, handleRoot);
   server.on("/screen", HTTP_GET, handleRoot);
