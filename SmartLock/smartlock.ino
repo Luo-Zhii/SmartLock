@@ -240,7 +240,7 @@ async function refresh(){
     else if(j.locked) big('LOCKED', 'c-red');
     else big('OPEN', 'c-green');
     $('smsg').textContent = j.msg || (j.motion && j.locked ? 'Mời nhập mã PIN...' : '');
-    $('sMotion').textContent = !j.hasPir ? '🚶 --' : (j.motion ? '🚶 Có người' : '🚶 Không có ai');
+    $('sMotion').textContent = !j.hasPir ? '🚶 --' : (!j.locked ? '🚶 Đã mở' : (j.motion ? '🚶 Có người' : '🚶 Không có ai'));
     $('sAlarm').textContent = j.alarm ? '🚨 BÁO ĐỘNG' : '🔕 Bình thường';
     $('log').innerHTML = j.log.map(l => '<li>' + l + '</li>').join('');
   }catch(e){
@@ -355,6 +355,7 @@ void lockDoor(const String& source) {
 
 void unlockDoor(const String& source) {
   isLocked = false;
+  motionSince = millis();  // chủ nhà đang ở cửa: reset đồng hồ PIR, tránh kêu nhầm sau khi khóa lại
   unlockedAt = millis();
   failCount = 0;
   stopAlarm();
@@ -365,7 +366,7 @@ void unlockDoor(const String& source) {
 
 // LED đỏ : báo động = nháy nhanh, tạm khóa = nháy chậm, đang khóa = sáng, đã mở = tắt
 // LED xanh: sáng khi đã mở khóa
-// LED vàng: sáng khi có người trước cửa hoặc đang tạm khóa
+// LED vàng: sáng khi có người trước cửa (đang khóa) hoặc đang tạm khóa
 // Còi    : kêu ngắt quãng (bíp - bíp) khi báo động
 void updateLeds() {
   unsigned long t = millis();
@@ -376,7 +377,7 @@ void updateLeds() {
   else red = isLocked;
   digitalWrite(PIN_LED_RED, red);
   digitalWrite(PIN_LED_GREEN, !isLocked);
-  digitalWrite(PIN_LED_YELLOW, alarmOn ? (t / 150) % 2 == 0 : (motion || inLockout));
+  digitalWrite(PIN_LED_YELLOW, alarmOn ? (t / 150) % 2 == 0 : ((motion && isLocked) || inLockout));
   setBuzzer(alarmOn && (t / 250) % 2 == 0);
 }
 
