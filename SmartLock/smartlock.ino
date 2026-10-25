@@ -76,6 +76,7 @@ bool alarmOn = false;
 unsigned long alarmStart = 0;
 bool motion = false;
 unsigned long motionSince = 0;
+bool pirLast = false;    // lần đọc PIR trước đó (để bắt đúng sườn LOW->HIGH)
 bool buzzerOn = false;
 
 String screenMsg;
@@ -387,11 +388,15 @@ void readSensors() {
   if (!USE_PIR) return;
 
   bool m = digitalRead(PIN_PIR) == HIGH;
-  if (m && !motion) {
+
+  if (m && !pirLast) {          // sườn lên thật sự (LOW -> HIGH): người mới xuất hiện
+    motion = true;
     motionSince = millis();
     addLog("Phát hiện người trước cửa");
+  } else if (!m) {              // hết chuyển động
+    motion = false;
   }
-  motion = m;
+  pirLast = m;
 
   // Cửa đang khóa mà có người đứng lâu trước cửa -> báo động
   if (motion && isLocked && !alarmOn && lockoutRemainingSec() == 0 &&
