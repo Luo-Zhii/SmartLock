@@ -76,7 +76,6 @@ bool alarmOn = false;
 unsigned long alarmStart = 0;
 bool motion = false;
 unsigned long motionSince = 0;
-bool pirWaitClear = false;  // sau báo động: chờ PIR về LOW rồi mới quét người mới
 bool buzzerOn = false;
 
 String screenMsg;
@@ -343,9 +342,8 @@ void stopAlarm() {
   alarmOn = false;
   setRelay(PIN_RELAY_ALARM, false);
   setBuzzer(false);
-  motion = false;        // tắt "có người" -> đèn vàng + web hết báo
-  motionSince = millis();
-  pirWaitClear = true;   // quét lại: đợi PIR về LOW rồi mới tính người mới
+  motion = false;         // đặt lại "không người"
+  motionSince = millis();  // đếm lại 8s từ đầu cho lần quét mới
   addLog("Tắt báo động");
 }
 
@@ -389,17 +387,6 @@ void readSensors() {
   if (!USE_PIR) return;
 
   bool m = digitalRead(PIN_PIR) == HIGH;
-
-  // Sau báo động: chờ cảm biến về LOW (hết người / ổn định) mới quét người mới
-  if (pirWaitClear) {
-    if (!m) {
-      pirWaitClear = false;
-      motion = false;
-      motionSince = millis();
-    }
-    return;
-  }
-
   if (m && !motion) {
     motionSince = millis();
     addLog("Phát hiện người trước cửa");
