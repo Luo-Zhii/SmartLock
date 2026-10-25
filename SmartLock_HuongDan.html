@@ -348,8 +348,8 @@ Tuốt 1.5cm vỏ:    [CÁI]═════════════════~
 </svg>
 <figcaption>Hình 3. Vị trí chân trên ESP32 DevKit V1 30 chân (nhìn từ mặt có chip, cổng USB quay xuống)</figcaption>
 </figure>
-<div class="note"><b>Đọc nhãn chân:</b> trên board, chân GPIO<i>x</i> được in là <code>D<i>x</i></code>. Riêng <b>TX2 = GPIO17</b> và <b>RX2 = GPIO16</b>. Một số board in là <code>G17</code>, <code>IO17</code> hoặc chỉ in <code>17</code>. Nếu board của bạn có <b>38 chân</b>, thứ tự chân sẽ khác hình trên. Khi đó hãy <b>luôn cắm theo nhãn in trên board</b>, đừng đếm vị trí.</div>
-<p>Các cặp chân của mỗi LED được chọn <b>nằm sát nhau</b> (D23/D22, D19/D18, TX2/RX2, D32/D33) để dây đi gọn, dễ nhìn.</p>
+<div class="note"><b>Đọc nhãn chân:</b> trên board, chân GPIO<i>x</i> được in là <code>D<i>x</i></code>. Riêng <b>TX2 = GPIO17 = D17</b> và <b>RX2 = GPIO16 = D16</b>. Một số board in là <code>G17</code>, <code>IO17</code> hoặc chỉ in <code>17</code>. Nếu board của bạn có <b>38 chân</b>, thứ tự chân sẽ khác hình trên. Khi đó hãy <b>luôn cắm theo nhãn in trên board</b>, đừng đếm vị trí.</div>
+<p>Các cặp chân của mỗi LED được chọn <b>nằm sát nhau</b> (D23/D22, D19/D18, D17/D16, D32/D33) để dây đi gọn, dễ nhìn.</p>
 
 <h3>5.2 Bảng nối dây đầy đủ</h3>
 <table>
@@ -362,8 +362,8 @@ Tuốt 1.5cm vỏ:    [CÁI]═════════════════~
   <tr><td>Chân ngắn (−)</td><td><b>D22</b> (GND phụ)</td><td>F-F</td></tr>
   <tr><td rowspan="2"><b>LED xanh</b> <span class="pill ok">bắt buộc</span></td><td>Chân dài (+) qua 220Ω</td><td><b>D18</b></td><td>F-F</td></tr>
   <tr><td>Chân ngắn (−)</td><td><b>D19</b> (GND phụ)</td><td>F-F</td></tr>
-  <tr><td rowspan="2">LED vàng <span class="pill opt">tùy chọn</span></td><td>Chân dài (+) qua 220Ω</td><td><b>TX2</b> (GPIO17)</td><td>1 đầu cái</td></tr>
-  <tr><td>Chân ngắn (−)</td><td><b>RX2</b> (GPIO16, GND phụ)</td><td>1 đầu cái</td></tr>
+  <tr><td rowspan="2">LED vàng <span class="pill opt">tùy chọn</span></td><td>Chân dài (+) qua 220Ω</td><td><b>D17</b> (TX2)</td><td>1 đầu cái</td></tr>
+  <tr><td>Chân ngắn (−)</td><td><b>D16</b> (RX2, GND phụ)</td><td>1 đầu cái</td></tr>
   <tr><td rowspan="2">Nút EXIT <span class="pill opt">tùy chọn</span></td><td>Chân 1</td><td><b>D32</b></td><td>1 đầu cái</td></tr>
   <tr><td>Chân 2 (chéo với chân 1)</td><td><b>D33</b> (GND phụ)</td><td>1 đầu cái</td></tr>
   <tr><td rowspan="2">Nút LOCK <span class="pill opt">tùy chọn</span></td><td>Chân 1</td><td><b>D13</b></td><td>1 đầu cái</td></tr>
@@ -472,8 +472,8 @@ Man hinh:   http://192.168.4.1/screen</code></pre></li>
   <h4><span class="num">4</span> LED vàng <span class="pill opt">tùy chọn</span></h4>
   <ol>
     <li>Làm 2 dây 1 đầu cái (mục 4.3), hoặc dùng 2 dây F-F còn lại nếu không định lắp cảm biến cửa.</li>
-    <li>Xoắn điện trở vào chân dài LED vàng. Nối chân còn lại của điện trở với <b>TX2</b> (GPIO17).</li>
-    <li>Nối chân ngắn LED với <b>RX2</b> (GPIO16).</li>
+    <li>Xoắn điện trở vào chân dài LED vàng. Nối chân còn lại của điện trở với <b>D17</b> (TX2).</li>
+    <li>Nối chân ngắn LED với <b>D16</b> (RX2).</li>
   </ol>
   <div class="check">✅ <b>Kiểm tra:</b> nhập sai 3 lần thì LED vàng sáng trong suốt 30 giây tạm khóa.</div>
 </div>
@@ -761,7 +761,7 @@ const int PIN_RELAY_LOCK  = 26;  // (D26) Relay IN1
 const int PIN_RELAY_ALARM = 27;  // (D27) Relay IN2
 const int PIN_LED_RED     = 23;  // (D23) LED đỏ (+) qua 220Ω
 const int PIN_LED_GREEN   = 18;  // (D18) LED xanh (+) qua 220Ω
-const int PIN_LED_YELLOW  = 17;  // (TX2) LED vàng (+) qua 220Ω
+const int PIN_LED_YELLOW  = 17;  // (D17/TX2) LED vàng (+) qua 220Ω
 const int PIN_BTN_EXIT    = 32;  // (D32) Nút EXIT
 const int PIN_BTN_LOCK    = 13;  // (D13) Nút LOCK
 const int PIN_DOOR_IR     = 34;  // (D34) OUT cảm biến tránh vật cản
@@ -771,7 +771,7 @@ const int PIN_PIR         = 35;  // (D35) OUT cảm biến PIR
 const int GND_PINS[] = {
   22,  // (D22) LED đỏ (−)
   19,  // (D19) LED xanh (−)
-  16,  // (RX2) LED vàng (−)
+  16,  // (D16/RX2) LED vàng (−)
   33,  // (D33) Nút EXIT
   14,  // (D14) Nút LOCK
   4,   // (D4)  PIR GND

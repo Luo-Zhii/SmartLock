@@ -138,7 +138,7 @@ Quy tắc: dây F-F để dành cho module có chân đực (Relay, IR, PIR), c�
 | 1 | **LED đỏ**: điện trở xoắn vào chân dài → D23, chân ngắn → D22 | LED đỏ sáng. Nhập sai PIN thì nháy 3 lần |
 | 2 | **LED xanh**: điện trở xoắn vào chân dài → D18, chân ngắn → D19 | Nhập `1234` thì LED xanh nháy rồi sáng, sau 5 giây tắt |
 | 3 | **Relay**: VCC → VIN, GND → GND, IN1 → D26, IN2 → D27 | Mở khóa thì relay 1 kêu "tách". Sai 3 lần thì relay 2 đóng 15 giây. **Đủ đề bài** 🎉 |
-| 4 | *(tùy chọn)* **LED vàng**: TX2 / RX2 | Sáng trong lúc tạm khóa |
+| 4 | *(tùy chọn)* **LED vàng**: D17 (+) / D16 (−) | Sáng trong lúc tạm khóa |
 | 5 | *(tùy chọn)* **Nút**: EXIT → D32 / D33, LOCK → D13 / D14 (chân chéo) | EXIT mở khóa. LOCK khóa và tắt báo động |
 | 6 | *(tùy chọn)* **IR**: VCC → 3V3, GND → GND, OUT → D34. Đặt `USE_DOOR_SENSOR = true` | Che cảm biến thì "Cửa: ĐÓNG". Bỏ tay khi đang khóa thì báo động |
 | 7 | *(tùy chọn)* **PIR**: VCC → VIN (dây Y), GND → D4, OUT → D35. Đặt `USE_PIR = true` | Chờ 60 giây, vẫy tay thì LED vàng sáng, web hiện "Có người" |

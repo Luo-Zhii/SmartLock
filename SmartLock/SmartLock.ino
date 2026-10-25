@@ -30,7 +30,7 @@ const int PIN_RELAY_LOCK  = 26;  // (D26) Relay IN1
 const int PIN_RELAY_ALARM = 27;  // (D27) Relay IN2
 const int PIN_LED_RED     = 23;  // (D23) LED đỏ (+) qua 220Ω
 const int PIN_LED_GREEN   = 18;  // (D18) LED xanh (+) qua 220Ω
-const int PIN_LED_YELLOW  = 17;  // (TX2) LED vàng (+) qua 220Ω
+const int PIN_LED_YELLOW  = 17;  // (D17/TX2) LED vàng (+) qua 220Ω
 const int PIN_BTN_EXIT    = 32;  // (D32) Nút EXIT
 const int PIN_BTN_LOCK    = 13;  // (D13) Nút LOCK
 const int PIN_DOOR_IR     = 34;  // (D34) OUT cảm biến tránh vật cản
@@ -40,15 +40,15 @@ const int PIN_PIR         = 35;  // (D35) OUT cảm biến PIR
 const int GND_PINS[] = {
   22,  // (D22) LED đỏ (−)
   19,  // (D19) LED xanh (−)
-  16,  // (RX2) LED vàng (−)
+  16,  // (D16/RX2) LED vàng (−)
   33,  // (D33) Nút EXIT
   14,  // (D14) Nút LOCK
   4,   // (D4)  PIR GND
 };
 
 const bool RELAY_ACTIVE_LOW = true;   // đa số module relay kích mức LOW
-const bool USE_DOOR_SENSOR  = false;  // đổi thành true sau khi lắp cảm biến cửa (IR)
-const bool USE_PIR          = false;  // đổi thành true sau khi lắp PIR
+const bool USE_DOOR_SENSOR  = true;   // đã lắp cảm biến cửa (IR) -> bật. Chưa lắp thì để false để tránh báo động giả
+const bool USE_PIR          = true;   // đã lắp PIR -> bật. Chưa lắp thì để false
 
 // ===== Thông số =====
 const char* DEFAULT_PIN = "1234";
