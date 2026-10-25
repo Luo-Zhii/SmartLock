@@ -1,18 +1,19 @@
 /*
  * KHÓA CỬA THÔNG MINH - NHẬP PIN TRÊN WEB (ESP32)
- * Lắp KHÔNG cần breadboard, KHÔNG cần OLED / còi:
  *   - Relay kênh 1 : chốt khóa cửa (relay đóng = mở khóa)
  *   - Relay kênh 2 : đầu ra báo động (bật trong lúc báo động)
  *   - LED xanh     : đã mở khóa / nháy khi nhập đúng PIN
  *   - LED đỏ       : đang khóa / nháy khi sai PIN / nháy nhanh khi báo động
- *   - LED vàng     : (tùy chọn) có người trước cửa hoặc đang tạm khóa
- *   - 2 nút nhấn   : (tùy chọn) EXIT mở từ trong nhà, LOCK khóa ngay + tắt báo động
- *   - PIR HC-SR501 : (tùy chọn) phát hiện có người trước cửa
- *   - Cảm biến tránh vật cản (IR): (tùy chọn) cảm biến cửa đóng/mở
+ *   - LED vàng     : có người trước cửa hoặc đang tạm khóa
+ *   - CÒI (buzzer) : kêu ngắt quãng khi báo động
+ *   - 2 nút nhấn   : EXIT mở từ trong nhà, LOCK khóa ngay + tắt báo động
+ *   - PIR HC-SR501 : phát hiện người trước cửa; nếu cửa đang KHÓA mà có người
+ *                    đứng quá PIR_ALARM_DELAY_MS thì BÁO ĐỘNG (còi + đèn + relay 2)
  *   - Màn hình: hiển thị trên WEB, trang /screen dùng cho điện thoại / tablet gắn ở cửa
  *
- * "GND phụ": vì không có breadboard, mỗi LED / nút nhấn / PIR được nối vào một
- * GPIO đặt mức LOW để làm chân GND riêng (chỉ dùng cho tải dòng nhỏ < 20mA).
+ * "GND phụ": mỗi LED / nút nhấn / PIR được nối vào một GPIO đặt mức LOW
+ * để làm chân GND riêng (chỉ dùng cho tải dòng nhỏ < 20mA).
+ * Còi nối thẳng vào chân GND thật của ESP32 (tải lớn hơn).
  *
  * Không cần cài thêm thư viện. Board: ESP32 Dev Module
  */
@@ -30,33 +31,36 @@ const int PIN_RELAY_LOCK  = 26;  // (D26) Relay IN1
 const int PIN_RELAY_ALARM = 27;  // (D27) Relay IN2
 const int PIN_LED_RED     = 23;  // (D23) LED đỏ (+) qua 220Ω
 const int PIN_LED_GREEN   = 18;  // (D18) LED xanh (+) qua 220Ω
-const int PIN_LED_YELLOW  = 17;  // (D17/TX2) LED vàng (+) qua 220Ω
+const int PIN_LED_YELLOW  = 17;  // (TX2) LED vàng (+) qua 220Ω
+const int PIN_BUZZER      = 25;  // (D25) Còi (+)
 const int PIN_BTN_EXIT    = 32;  // (D32) Nút EXIT
 const int PIN_BTN_LOCK    = 13;  // (D13) Nút LOCK
-const int PIN_DOOR_IR     = 34;  // (D34) OUT cảm biến tránh vật cản
 const int PIN_PIR         = 35;  // (D35) OUT cảm biến PIR
 
 // GND phụ: các chân này luôn ở mức LOW
 const int GND_PINS[] = {
   22,  // (D22) LED đỏ (−)
   19,  // (D19) LED xanh (−)
-  16,  // (D16/RX2) LED vàng (−)
+  16,  // (RX2) LED vàng (−)
   33,  // (D33) Nút EXIT
   14,  // (D14) Nút LOCK
   4,   // (D4)  PIR GND
 };
 
 const bool RELAY_ACTIVE_LOW = true;   // đa số module relay kích mức LOW
-const bool USE_DOOR_SENSOR  = true;   // đã lắp cảm biến cửa (IR) -> bật. Chưa lắp thì để false để tránh báo động giả
-const bool USE_PIR          = true;   // đã lắp PIR -> bật. Chưa lắp thì để false
+const bool USE_PIR          = true;   // đổi thành false nếu không lắp PIR
 
 // ===== Thông số =====
 const char* DEFAULT_PIN = "1234";
-const int MAX_FAILS               = 3;
-const unsigned long LOCKOUT_MS    = 30000;
-const unsigned long AUTO_LOCK_MS  = 5000;
-const unsigned long ALARM_MS      = 15000;
-const unsigned long SCREEN_MSG_MS = 4000;
+const int MAX_FAILS                  = 3;
+const unsigned long LOCKOUT_MS       = 30000;
+const unsigned long AUTO_LOCK_MS     = 5000;
+const unsigned long ALARM_MS         = 15000;
+const unsigned long SCREEN_MSG_MS    = 4000;
+// Cửa đang khóa mà có người đứng trước cửa liên tục quá thời gian này -> báo động
+// (đặt 0 để báo động ngay khi PIR phát hiện chuyển động)
+const unsigned long PIR_ALARM_DELAY_MS = 8000;
+const int BUZZER_FREQ                = 2000;  // Hz
 
 WebServer server(80);
 Preferences prefs;
@@ -70,8 +74,9 @@ bool lockedOut = false;
 unsigned long lockoutStart = 0;
 bool alarmOn = false;
 unsigned long alarmStart = 0;
-bool doorOpen = false;
 bool motion = false;
+unsigned long motionSince = 0;
+bool buzzerOn = false;
 
 String screenMsg;
 unsigned long screenMsgAt = 0;
@@ -99,68 +104,101 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Smart Lock</title>
 <style>
-  body{font-family:sans-serif;background:#1e1e2e;color:#fff;text-align:center;margin:0;padding:16px}
-  .screen{background:#000;border:6px solid #2a2a3a;border-radius:14px;max-width:340px;margin:0 auto 14px;
-    padding:12px 14px;font-family:monospace;color:#7fd3ff;text-align:left}
-  .row{display:flex;justify-content:space-between;font-size:13px}
-  .line{border-top:1px solid #1f4a66;margin:6px 0}
-  #big{font-size:34px;font-weight:bold;text-align:center;margin:10px 0;letter-spacing:2px}
-  #smsg{min-height:20px;text-align:center;font-size:15px;color:#fff}
-  .c-red{color:#ff5c5c}.c-green{color:#4cd964}.c-yellow{color:#ffcc00}
-  .blink{animation:bl .4s steps(1) infinite}
-  @keyframes bl{50%{opacity:0}}
-  #dots{font-size:32px;letter-spacing:8px;height:44px;margin:6px 0}
-  .pad{display:grid;grid-template-columns:repeat(3,76px);gap:12px;justify-content:center}
-  .pad button{height:68px;font-size:26px;border:none;border-radius:50%;background:#33334d;color:#fff}
-  .pad button:active{background:#55557a}
-  .pad .ok{background:#2e8b57}.pad .clr{background:#b03a2e}
-  #msg{min-height:24px;margin:12px 0}
-  .ok-msg{color:#4cd964}.err-msg{color:#ff5c5c}
-  details{margin-top:18px}
-  input{padding:10px;margin:6px;border-radius:8px;border:none;width:160px;font-size:16px}
-  .btn{padding:10px 20px;border:none;border-radius:8px;background:#4a6cf7;color:#fff;font-size:16px;margin:6px}
-  #log{list-style:none;padding:0;max-width:340px;margin:8px auto;text-align:left;font-size:13px;color:#c9c9d9}
-  #log li{padding:4px 0;border-bottom:1px solid #33334d}
-  body.screen-only{padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
-  body.screen-only .screen{max-width:none;width:92vw;margin:0}
-  body.screen-only #big{font-size:15vw}
-  body.screen-only #smsg{font-size:5vw;min-height:7vw}
-  body.screen-only .row{font-size:4vw}
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --border:#e5e7eb; --ink:#111827; --muted:#6b7280;
+    --green:#16a34a; --red:#dc2626; --amber:#b45309; --accent:#2563eb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:20px 16px;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;display:flex;justify-content:center}
+  .wrap{width:100%;max-width:360px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 30px rgba(16,24,40,.06);
+    padding:18px;margin-bottom:16px}
+  .brand{display:flex;align-items:center;justify-content:space-between;
+    font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  #sMotion{text-transform:none;letter-spacing:0}
+  .display{border:1px solid var(--border);border-radius:12px;background:#f8f9fb;padding:20px 16px 14px;margin-top:12px}
+  .row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
+  .line{border-top:1px solid var(--border);margin:12px 0}
+  #big{font-size:40px;font-weight:600;text-align:center;margin:14px 0 6px;letter-spacing:.04em}
+  #smsg{min-height:20px;text-align:center;font-size:14px;color:var(--muted)}
+  .c-red{color:var(--red)}.c-green{color:var(--green)}.c-yellow{color:var(--amber)}
+  .blink{animation:bl .5s steps(1) infinite}
+  @keyframes bl{50%{opacity:.35}}
+  #dots{font-size:20px;letter-spacing:7px;text-align:center;height:28px;color:var(--muted);margin:2px 0 4px}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .pad button{height:58px;font-size:20px;font-weight:500;border:1px solid var(--border);
+    border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer;
+    transition:background .08s ease,transform .05s ease}
+  .pad button:active{background:#eef1f5;transform:translateY(1px)}
+  .pad .ok{background:var(--green);border-color:var(--green);color:#fff}
+  .pad .ok:active{background:#15803d}
+  .pad .clr{background:var(--red);border-color:var(--red);color:#fff}
+  .pad .clr:active{background:#b91c1c}
+  #msg{min-height:22px;margin:12px 0 2px;font-size:14px;text-align:center}
+  .ok-msg{color:var(--green)}.err-msg{color:var(--red)}
+  .btn{display:block;width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;
+    background:var(--card);color:var(--ink);font-size:15px;font-weight:500;cursor:pointer;margin:10px 0 0}
+  .btn:active{background:#eef1f5}
+  .primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .primary:active{background:#1d4ed8}
+  details{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+  summary{cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;outline:none}
+  input{padding:10px 12px;margin:6px 0;border-radius:10px;border:1px solid var(--border);width:100%;
+    font-size:15px;background:#fff;color:var(--ink)}
+  input:focus{outline:none;border-color:var(--accent)}
+  #log{list-style:none;padding:0;margin:10px 0 0;font-size:13px;color:var(--muted)}
+  #log li{padding:7px 0;border-bottom:1px solid var(--border)}
+  #log li:last-child{border-bottom:none}
+  body.screen-only{background:#0b0b0d;display:flex;align-items:center;justify-content:center;min-height:100vh}
+  body.screen-only .wrap{max-width:none;width:100%}
   body.screen-only .ctrl{display:none}
+  body.screen-only .card{background:#0b0b0d;border:none;box-shadow:none;margin:0;padding:6vw}
+  body.screen-only .display{border:none;background:#0b0b0d;padding:0;margin:0}
+  body.screen-only #big{font-size:22vw}
+  body.screen-only #smsg{font-size:5.5vw;min-height:7vw}
+  body.screen-only .row{font-size:4vw}
+  body.screen-only .line{border-top:1px solid #24242a}
+  body.screen-only .brand{color:#6b7280}
 </style>
 </head>
 <body>
-  <div class="screen">
-    <div class="row"><span>SMART LOCK</span><span id="sDoor">--</span></div>
-    <div class="line"></div>
-    <div id="big">...</div>
-    <div id="smsg"></div>
-    <div class="line"></div>
-    <div class="row"><span id="sMotion">--</span><span id="sAlarm">--</span></div>
-  </div>
-
-  <div class="ctrl">
-    <div id="dots">----</div>
-    <div class="pad">
-      <button onclick="press(1)">1</button><button onclick="press(2)">2</button><button onclick="press(3)">3</button>
-      <button onclick="press(4)">4</button><button onclick="press(5)">5</button><button onclick="press(6)">6</button>
-      <button onclick="press(7)">7</button><button onclick="press(8)">8</button><button onclick="press(9)">9</button>
-      <button class="clr" onclick="clr()">C</button><button onclick="press(0)">0</button><button class="ok" onclick="send()">OK</button>
+  <div class="wrap">
+    <div class="card">
+      <div class="brand"><span>Smart Lock</span><span id="sMotion">—</span></div>
+      <div class="display">
+        <div id="big">...</div>
+        <div id="smsg"></div>
+        <div class="line"></div>
+        <div class="row"><span>Trạng thái</span><span id="sAlarm">—</span></div>
+      </div>
     </div>
-    <div id="msg"></div>
-    <button class="btn" onclick="lockNow()">Khóa ngay</button>
 
-    <details>
-      <summary>Đổi mã PIN</summary>
-      <input id="oldPin" type="password" inputmode="numeric" placeholder="PIN cũ"><br>
-      <input id="newPin" type="password" inputmode="numeric" placeholder="PIN mới (4-8 số)"><br>
-      <button class="btn" onclick="changePin()">Lưu</button>
-    </details>
+    <div class="ctrl card">
+      <div id="dots">----</div>
+      <div class="pad">
+        <button onclick="press(1)">1</button><button onclick="press(2)">2</button><button onclick="press(3)">3</button>
+        <button onclick="press(4)">4</button><button onclick="press(5)">5</button><button onclick="press(6)">6</button>
+        <button onclick="press(7)">7</button><button onclick="press(8)">8</button><button onclick="press(9)">9</button>
+        <button class="clr" onclick="clr()">C</button><button onclick="press(0)">0</button><button class="ok" onclick="send()">OK</button>
+      </div>
+      <div id="msg"></div>
+      <button class="btn primary" onclick="lockNow()">Khóa ngay</button>
 
-    <details open>
-      <summary>Nhật ký</summary>
-      <ul id="log"></ul>
-    </details>
+      <details>
+        <summary>Đổi mã PIN</summary>
+        <input id="oldPin" type="password" inputmode="numeric" placeholder="PIN cũ"><br>
+        <input id="newPin" type="password" inputmode="numeric" placeholder="PIN mới (4-8 số)"><br>
+        <button class="btn primary" onclick="changePin()">Lưu</button>
+      </details>
+
+      <details open>
+        <summary>Nhật ký</summary>
+        <ul id="log"></ul>
+      </details>
+    </div>
   </div>
 
 <script>
@@ -198,9 +236,10 @@ async function refresh(){
     else if(j.locked) big('LOCKED', 'c-red');
     else big('OPEN', 'c-green');
     $('smsg').textContent = j.msg || (j.motion && j.locked ? 'Mời nhập mã PIN...' : '');
-    $('sDoor').textContent = !j.hasDoor ? '🚪 Cửa: --' : (j.door ? '🚪 Cửa: MỞ' : '🚪 Cửa: ĐÓNG');
-    $('sMotion').textContent = !j.hasPir ? '🚶 --' : (j.motion ? '🚶 Có người' : '🚶 Không có ai');
-    $('sAlarm').textContent = j.alarm ? '🚨 BÁO ĐỘNG' : '🔕 Bình thường';
+    $('sMotion').textContent = !j.hasPir ? '—' : (j.motion ? 'Có người trước cửa' : 'Không có người');
+    $('sMotion').className = (j.hasPir && j.motion) ? 'c-yellow' : '';
+    $('sAlarm').textContent = j.alarm ? 'Báo động' : 'An toàn';
+    $('sAlarm').className = j.alarm ? 'c-red' : '';
     $('log').innerHTML = j.log.map(l => '<li>' + l + '</li>').join('');
   }catch(e){
     big('MẤT KẾT NỐI', 'c-yellow');
@@ -265,6 +304,14 @@ void setRelay(int pin, bool on) {
   digitalWrite(pin, (on ^ RELAY_ACTIVE_LOW) ? HIGH : LOW);
 }
 
+// Bật/tắt còi (dùng tone để chạy được cả còi chủ động, còi thụ động và Wokwi)
+void setBuzzer(bool on) {
+  if (on == buzzerOn) return;
+  buzzerOn = on;
+  if (on) tone(PIN_BUZZER, BUZZER_FREQ);
+  else    noTone(PIN_BUZZER);
+}
+
 // PIN đúng: LED xanh nháy 3 lần
 void flashSuccess() {
   for (int i = 0; i < 3; i++) {
@@ -292,6 +339,7 @@ void stopAlarm() {
   if (!alarmOn) return;
   alarmOn = false;
   setRelay(PIN_RELAY_ALARM, false);
+  setBuzzer(false);
   addLog("Tắt báo động");
 }
 
@@ -315,6 +363,7 @@ void unlockDoor(const String& source) {
 // LED đỏ : báo động = nháy nhanh, tạm khóa = nháy chậm, đang khóa = sáng, đã mở = tắt
 // LED xanh: sáng khi đã mở khóa
 // LED vàng: sáng khi có người trước cửa hoặc đang tạm khóa
+// Còi    : kêu ngắt quãng (bíp - bíp) khi báo động
 void updateLeds() {
   unsigned long t = millis();
   bool inLockout = lockoutRemainingSec() > 0;
@@ -324,30 +373,27 @@ void updateLeds() {
   else red = isLocked;
   digitalWrite(PIN_LED_RED, red);
   digitalWrite(PIN_LED_GREEN, !isLocked);
-  digitalWrite(PIN_LED_YELLOW, motion || inLockout);
+  digitalWrite(PIN_LED_YELLOW, alarmOn ? (t / 150) % 2 == 0 : (motion || inLockout));
+  setBuzzer(alarmOn && (t / 250) % 2 == 0);
 }
 
 // ================= CẢM BIẾN & NÚT NHẤN =================
-bool readDoorOpen() {
-  // Module tránh vật cản: OUT = LOW khi thấy vật cản (cánh cửa) -> cửa đóng
-  return digitalRead(PIN_DOOR_IR) == HIGH;
-}
-
 void readSensors() {
-  if (USE_PIR) {
-    bool m = digitalRead(PIN_PIR) == HIGH;
-    if (m && !motion) addLog("Phát hiện người trước cửa");
-    motion = m;
-  }
+  if (!USE_PIR) return;
 
-  if (!USE_DOOR_SENSOR) return;
-  bool open = readDoorOpen();
-  if (open == doorOpen) return;
-  doorOpen = open;
-  addLog(open ? "Cửa mở" : "Cửa đóng");
-  if (open && isLocked) {
-    showMsg("Cửa bị mở trái phép!");
-    startAlarm("cửa bị mở khi đang khóa");
+  bool m = digitalRead(PIN_PIR) == HIGH;
+  if (m && !motion) {
+    motionSince = millis();
+    addLog("Phát hiện người trước cửa");
+  }
+  motion = m;
+
+  // Cửa đang khóa mà có người đứng lâu trước cửa -> báo động
+  if (motion && isLocked && !alarmOn && lockoutRemainingSec() == 0 &&
+      millis() - motionSince >= PIR_ALARM_DELAY_MS) {
+    showMsg("Phát hiện người lạ!");
+    startAlarm("PIR phát hiện người trước cửa");
+    motionSince = millis();  // nếu người vẫn đứng đó, sau khi hết báo động sẽ đếm lại
   }
 }
 
@@ -390,8 +436,6 @@ void handleStatus() {
   bool msgActive = screenMsg.length() && millis() - screenMsgAt < SCREEN_MSG_MS;
   String json = "{\"locked\":" + jsonBool(isLocked) +
                 ",\"lockout\":" + String(lockoutRemainingSec()) +
-                ",\"hasDoor\":" + jsonBool(USE_DOOR_SENSOR) +
-                ",\"door\":" + jsonBool(doorOpen) +
                 ",\"hasPir\":" + jsonBool(USE_PIR) +
                 ",\"motion\":" + jsonBool(motion) +
                 ",\"alarm\":" + jsonBool(alarmOn) +
@@ -492,15 +536,15 @@ void setup() {
   pinMode(PIN_LED_GREEN, OUTPUT);
   pinMode(PIN_LED_YELLOW, OUTPUT);
   pinMode(PIN_LED_RED, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
+  digitalWrite(PIN_BUZZER, LOW);
   pinMode(PIN_BTN_EXIT, INPUT_PULLUP);
   pinMode(PIN_BTN_LOCK, INPUT_PULLUP);
-  pinMode(PIN_DOOR_IR, INPUT);
   pinMode(PIN_PIR, INPUT);
 
   prefs.begin("smartlock", false);
   currentPin = prefs.getString("pin", DEFAULT_PIN);
 
-  if (USE_DOOR_SENSOR) doorOpen = readDoorOpen();
   lockDoor("khởi động");
 
   WiFi.softAP(AP_SSID, AP_PASS);
@@ -511,10 +555,6 @@ void setup() {
   Serial.print("Man hinh:   http://");
   Serial.print(WiFi.softAPIP());
   Serial.println("/screen");
-  Serial.print("Cam bien cua (IR): ");
-  Serial.println(USE_DOOR_SENSOR ? "BAT" : "TAT");
-  Serial.print("Cam bien PIR: ");
-  Serial.println(USE_PIR ? "BAT" : "TAT");
 
   server.on("/", HTTP_GET, handleRoot);
   server.on("/screen", HTTP_GET, handleRoot);
@@ -530,8 +570,8 @@ void loop() {
   handleButtons();
   readSensors();
 
-  // Tự khóa lại khi hết thời gian VÀ cửa đã đóng
-  if (!isLocked && millis() - unlockedAt >= AUTO_LOCK_MS && !(USE_DOOR_SENSOR && doorOpen)) {
+  // Tự khóa lại khi hết thời gian mở khóa
+  if (!isLocked && millis() - unlockedAt >= AUTO_LOCK_MS) {
     lockDoor("tự động");
   }
 
