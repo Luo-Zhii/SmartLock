@@ -60,6 +60,8 @@ const unsigned long SCREEN_MSG_MS    = 4000;
 // Cửa đang khóa mà có người đứng trước cửa liên tục quá thời gian này -> báo động
 // (đặt 0 để báo động ngay khi PIR phát hiện chuyển động)
 const unsigned long PIR_ALARM_DELAY_MS = 8000;
+// HC-SR501 vừa cấp nguồn cần ~30s mới ổn định; lúc này output lởm chởm dễ gây báo động giả
+const unsigned long PIR_WARMUP_MS      = 30000;
 const int BUZZER_FREQ                = 2000;  // Hz
 
 WebServer server(80);
@@ -388,6 +390,13 @@ void readSensors() {
   if (!USE_PIR) return;
 
   bool m = digitalRead(PIN_PIR) == HIGH;
+
+  // PIR đang warm-up (chưa ổn định): chỉ theo dõi trạng thái thô, chưa báo -> tránh nháy vàng khi vừa cấp nguồn
+  if (millis() < PIR_WARMUP_MS) {
+    pirLast = m;
+    motion = false;
+    return;
+  }
 
   if (m && !pirLast) {          // sườn lên thật sự (LOW -> HIGH): người mới xuất hiện
     motion = true;
