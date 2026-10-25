@@ -104,101 +104,68 @@ const char PAGE_HTML[] PROGMEM = R"rawliteral(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Smart Lock</title>
 <style>
-  :root{
-    --bg:#f4f5f7; --card:#ffffff; --border:#e5e7eb; --ink:#111827; --muted:#6b7280;
-    --green:#16a34a; --red:#dc2626; --amber:#b45309; --accent:#2563eb;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;padding:20px 16px;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;display:flex;justify-content:center}
-  .wrap{width:100%;max-width:360px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;
-    box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 30px rgba(16,24,40,.06);
-    padding:18px;margin-bottom:16px}
-  .brand{display:flex;align-items:center;justify-content:space-between;
-    font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  #sMotion{text-transform:none;letter-spacing:0}
-  .display{border:1px solid var(--border);border-radius:12px;background:#f8f9fb;padding:20px 16px 14px;margin-top:12px}
-  .row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
-  .line{border-top:1px solid var(--border);margin:12px 0}
-  #big{font-size:40px;font-weight:600;text-align:center;margin:14px 0 6px;letter-spacing:.04em}
-  #smsg{min-height:20px;text-align:center;font-size:14px;color:var(--muted)}
-  .c-red{color:var(--red)}.c-green{color:var(--green)}.c-yellow{color:var(--amber)}
-  .blink{animation:bl .5s steps(1) infinite}
-  @keyframes bl{50%{opacity:.35}}
-  #dots{font-size:20px;letter-spacing:7px;text-align:center;height:28px;color:var(--muted);margin:2px 0 4px}
-  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .pad button{height:58px;font-size:20px;font-weight:500;border:1px solid var(--border);
-    border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer;
-    transition:background .08s ease,transform .05s ease}
-  .pad button:active{background:#eef1f5;transform:translateY(1px)}
-  .pad .ok{background:var(--green);border-color:var(--green);color:#fff}
-  .pad .ok:active{background:#15803d}
-  .pad .clr{background:var(--red);border-color:var(--red);color:#fff}
-  .pad .clr:active{background:#b91c1c}
-  #msg{min-height:22px;margin:12px 0 2px;font-size:14px;text-align:center}
-  .ok-msg{color:var(--green)}.err-msg{color:var(--red)}
-  .btn{display:block;width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;
-    background:var(--card);color:var(--ink);font-size:15px;font-weight:500;cursor:pointer;margin:10px 0 0}
-  .btn:active{background:#eef1f5}
-  .primary{background:var(--accent);border-color:var(--accent);color:#fff}
-  .primary:active{background:#1d4ed8}
-  details{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
-  summary{cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;outline:none}
-  input{padding:10px 12px;margin:6px 0;border-radius:10px;border:1px solid var(--border);width:100%;
-    font-size:15px;background:#fff;color:var(--ink)}
-  input:focus{outline:none;border-color:var(--accent)}
-  #log{list-style:none;padding:0;margin:10px 0 0;font-size:13px;color:var(--muted)}
-  #log li{padding:7px 0;border-bottom:1px solid var(--border)}
-  #log li:last-child{border-bottom:none}
-  body.screen-only{background:#0b0b0d;display:flex;align-items:center;justify-content:center;min-height:100vh}
-  body.screen-only .wrap{max-width:none;width:100%}
-  body.screen-only .ctrl{display:none}
-  body.screen-only .card{background:#0b0b0d;border:none;box-shadow:none;margin:0;padding:6vw}
-  body.screen-only .display{border:none;background:#0b0b0d;padding:0;margin:0}
-  body.screen-only #big{font-size:22vw}
-  body.screen-only #smsg{font-size:5.5vw;min-height:7vw}
+  body{font-family:sans-serif;background:#1e1e2e;color:#fff;text-align:center;margin:0;padding:16px}
+  .screen{background:#000;border:6px solid #2a2a3a;border-radius:14px;max-width:340px;margin:0 auto 14px;
+    padding:12px 14px;font-family:monospace;color:#7fd3ff;text-align:left}
+  .row{display:flex;justify-content:space-between;font-size:13px}
+  .line{border-top:1px solid #1f4a66;margin:6px 0}
+  #big{font-size:34px;font-weight:bold;text-align:center;margin:10px 0;letter-spacing:2px}
+  #smsg{min-height:20px;text-align:center;font-size:15px;color:#fff}
+  .c-red{color:#ff5c5c}.c-green{color:#4cd964}.c-yellow{color:#ffcc00}
+  .blink{animation:bl .4s steps(1) infinite}
+  @keyframes bl{50%{opacity:0}}
+  #dots{font-size:32px;letter-spacing:8px;height:44px;margin:6px 0}
+  .pad{display:grid;grid-template-columns:repeat(3,76px);gap:12px;justify-content:center}
+  .pad button{height:68px;font-size:26px;border:none;border-radius:50%;background:#33334d;color:#fff}
+  .pad button:active{background:#55557a}
+  .pad .ok{background:#2e8b57}.pad .clr{background:#b03a2e}
+  #msg{min-height:24px;margin:12px 0}
+  .ok-msg{color:#4cd964}.err-msg{color:#ff5c5c}
+  details{margin-top:18px}
+  input{padding:10px;margin:6px;border-radius:8px;border:none;width:160px;font-size:16px}
+  .btn{padding:10px 20px;border:none;border-radius:8px;background:#4a6cf7;color:#fff;font-size:16px;margin:6px}
+  #log{list-style:none;padding:0;max-width:340px;margin:8px auto;text-align:left;font-size:13px;color:#c9c9d9}
+  #log li{padding:4px 0;border-bottom:1px solid #33334d}
+  body.screen-only{padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
+  body.screen-only .screen{max-width:none;width:92vw;margin:0}
+  body.screen-only #big{font-size:15vw}
+  body.screen-only #smsg{font-size:5vw;min-height:7vw}
   body.screen-only .row{font-size:4vw}
-  body.screen-only .line{border-top:1px solid #24242a}
-  body.screen-only .brand{color:#6b7280}
+  body.screen-only .ctrl{display:none}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="brand"><span>Smart Lock</span><span id="sMotion">—</span></div>
-      <div class="display">
-        <div id="big">...</div>
-        <div id="smsg"></div>
-        <div class="line"></div>
-        <div class="row"><span>Trạng thái</span><span id="sAlarm">—</span></div>
-      </div>
+  <div class="screen">
+    <div class="row"><span>SMART LOCK</span></div>
+    <div class="line"></div>
+    <div id="big">...</div>
+    <div id="smsg"></div>
+    <div class="line"></div>
+    <div class="row"><span id="sMotion">--</span><span id="sAlarm">--</span></div>
+  </div>
+
+  <div class="ctrl">
+    <div id="dots">----</div>
+    <div class="pad">
+      <button onclick="press(1)">1</button><button onclick="press(2)">2</button><button onclick="press(3)">3</button>
+      <button onclick="press(4)">4</button><button onclick="press(5)">5</button><button onclick="press(6)">6</button>
+      <button onclick="press(7)">7</button><button onclick="press(8)">8</button><button onclick="press(9)">9</button>
+      <button class="clr" onclick="clr()">C</button><button onclick="press(0)">0</button><button class="ok" onclick="send()">OK</button>
     </div>
+    <div id="msg"></div>
+    <button class="btn" onclick="lockNow()">Khóa ngay</button>
 
-    <div class="ctrl card">
-      <div id="dots">----</div>
-      <div class="pad">
-        <button onclick="press(1)">1</button><button onclick="press(2)">2</button><button onclick="press(3)">3</button>
-        <button onclick="press(4)">4</button><button onclick="press(5)">5</button><button onclick="press(6)">6</button>
-        <button onclick="press(7)">7</button><button onclick="press(8)">8</button><button onclick="press(9)">9</button>
-        <button class="clr" onclick="clr()">C</button><button onclick="press(0)">0</button><button class="ok" onclick="send()">OK</button>
-      </div>
-      <div id="msg"></div>
-      <button class="btn primary" onclick="lockNow()">Khóa ngay</button>
+    <details>
+      <summary>Đổi mã PIN</summary>
+      <input id="oldPin" type="password" inputmode="numeric" placeholder="PIN cũ"><br>
+      <input id="newPin" type="password" inputmode="numeric" placeholder="PIN mới (4-8 số)"><br>
+      <button class="btn" onclick="changePin()">Lưu</button>
+    </details>
 
-      <details>
-        <summary>Đổi mã PIN</summary>
-        <input id="oldPin" type="password" inputmode="numeric" placeholder="PIN cũ"><br>
-        <input id="newPin" type="password" inputmode="numeric" placeholder="PIN mới (4-8 số)"><br>
-        <button class="btn primary" onclick="changePin()">Lưu</button>
-      </details>
-
-      <details open>
-        <summary>Nhật ký</summary>
-        <ul id="log"></ul>
-      </details>
-    </div>
+    <details open>
+      <summary>Nhật ký</summary>
+      <ul id="log"></ul>
+    </details>
   </div>
 
 <script>
@@ -236,10 +203,8 @@ async function refresh(){
     else if(j.locked) big('LOCKED', 'c-red');
     else big('OPEN', 'c-green');
     $('smsg').textContent = j.msg || (j.motion && j.locked ? 'Mời nhập mã PIN...' : '');
-    $('sMotion').textContent = !j.hasPir ? '—' : (j.motion ? 'Có người trước cửa' : 'Không có người');
-    $('sMotion').className = (j.hasPir && j.motion) ? 'c-yellow' : '';
-    $('sAlarm').textContent = j.alarm ? 'Báo động' : 'An toàn';
-    $('sAlarm').className = j.alarm ? 'c-red' : '';
+    $('sMotion').textContent = !j.hasPir ? '🚶 --' : (j.motion ? '🚶 Có người' : '🚶 Không có ai');
+    $('sAlarm').textContent = j.alarm ? '🚨 BÁO ĐỘNG' : '🔕 Bình thường';
     $('log').innerHTML = j.log.map(l => '<li>' + l + '</li>').join('');
   }catch(e){
     big('MẤT KẾT NỐI', 'c-yellow');
