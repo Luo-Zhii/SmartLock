@@ -4,7 +4,7 @@
 
 ESP32 tự phát WiFi và chạy một Web Server gồm **màn hình trạng thái** và **bàn phím số**. Người dùng kết nối điện thoại vào WiFi đó, nhập đúng PIN thì ESP32 kích relay để mở khóa và LED xanh sáng. Nhập sai thì LED đỏ nháy. Sai nhiều lần thì hệ thống báo động.
 
-**Lắp không cần breadboard, không cần màn hình OLED.** Phần bắt buộc chỉ gồm ESP32, Relay 2 kênh, LED xanh, LED đỏ và 8 dây F-F, không phải cắt dây nào. Còi buzzer, LED vàng, 2 nút và PIR là phần tùy chọn.
+**Lắp trên breadboard, không cần màn hình OLED.** Phần bắt buộc chỉ gồm ESP32, breadboard, Relay 2 kênh, LED xanh, LED đỏ và dây cắm, không phải cắt hay xoắn dây nào. Còi buzzer, LED vàng, 2 nút và PIR là phần tùy chọn.
 
 > 📘 **Hướng dẫn đầy đủ** gồm hình vẽ cách nối LED và nút, sơ đồ chân ESP32, cắm dây từng bước có kiểm tra, giải thích code, bảo mật, kiểm thử và xử lý lỗi: tải file [`SmartLock_HuongDan.html`](SmartLock_HuongDan.html) về, mở bằng trình duyệt, nhấn **Ctrl+P** để lưu thành PDF.
 
@@ -15,10 +15,11 @@ ESP32 tự phát WiFi và chạy một Web Server gồm **màn hình trạng th�
 - [Tính năng](#-tính-năng)
 - [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
 - [Linh kiện](#-linh-kiện)
-- [Nối dây không breadboard](#-nối-dây-không-breadboard)
+- [Nối dây trên breadboard](#-nối-dây-trên-breadboard)
 - [Cắm dây từng bước](#-cắm-dây-từng-bước)
 - [Cài đặt & nạp code](#-cài-đặt--nạp-code)
 - [Sử dụng](#-sử-dụng)
+- [Cơ chế quét của PIR](#-cơ-chế-quét-của-pir)
 - [Cấu hình](#-cấu-hình)
 - [Web API](#-web-api)
 - [Bảo mật & xử lý chuỗi](#-bảo-mật--xử-lý-chuỗi)
@@ -61,23 +62,25 @@ ESP32 tự phát WiFi và chạy một Web Server gồm **màn hình trạng th�
 | Relay 2 kênh 5V | bắt buộc | 1 | CH1: chốt khóa · CH2: đầu ra báo động |
 | LED đỏ + điện trở 220Ω | bắt buộc | 1 + 1 | Đang khóa, sai PIN, báo động |
 | LED xanh + điện trở 220Ω | bắt buộc | 1 + 1 | Đã mở, PIN đúng |
-| Dây Dupont F-F | bắt buộc | 8–10 | Nối dây |
+| Breadboard (830 lỗ, hoặc 2 board 400 lỗ) | bắt buộc | 1 | Cắm ESP32, LED, điện trở, nút |
+| Dây cắm M-M | bắt buộc | 10–20 | Nối giữa các hàng trên breadboard |
+| Dây Dupont M-F | bắt buộc | 4–7 | Nối breadboard tới module có chân đực (Relay, PIR) |
 | LED vàng + điện trở 220Ω | tùy chọn | 1 + 1 | Có người, đang tạm khóa |
 | Nút nhấn | tùy chọn | 2 | EXIT, LOCK |
 | Còi buzzer (loại nhỏ, ≤ 20mA) | tùy chọn | 1 | Kêu "bíp - bíp" khi báo động |
 | PIR HC-SR501 | tùy chọn | 1 | Phát hiện người, báo động khi đứng lâu trước cửa đang khóa |
-| Dây Dupont F-M | tùy chọn | ≤ 10 | Cắt thành "dây 1 đầu cái" |
-| Kéo, băng dính điện, bìa carton | dụng cụ | — | Cắt và tuốt dây, cách điện, gắn mô hình |
 
-Không dùng: breadboard, OLED, DHT11, quang trở, chiết áp.
+Không dùng: OLED, DHT11, quang trở, chiết áp.
 
-## 🔌 Nối dây không breadboard
+## 🔌 Nối dây trên breadboard
 
-### Ba kỹ thuật cần biết
+### Cách bố trí
 
-1. **GND phụ**: ESP32 chỉ có 2 chân GND, nên code đặt thêm một số GPIO ở mức `LOW` để làm GND riêng cho từng LED, nút nhấn và PIR. Cách này chỉ dùng cho tải dưới 20mA: LED khoảng 6mA, nút khoảng 0.07mA, PIR dưới 0.1mA. **Không** dùng cho relay hay còi (còi nối vào GND thật).
-2. **LED + điện trở**: xoắn 1 chân điện trở 220Ω vào **chân dài (+)** của LED rồi quấn băng dính. Chân còn lại của điện trở cắm vào đầu cái dây F-F nối tới GPIO. Chân ngắn (−) của LED cắm vào dây F-F nối tới chân GND phụ.
-3. **Dây 1 đầu cái** *(chỉ cần cho phần tùy chọn)*: cắt bỏ đầu đực của dây F-M, tuốt 1.5cm vỏ, quấn lõi đồng vào chân linh kiện rồi quấn băng dính. Đầu cái còn lại cắm vào chân ESP32. **Dây chữ Y** (xoắn chung 3 đoạn dây có đầu cái) dùng khi chân VIN phải cấp cho cả Relay và PIR.
+1. **Cắm ESP32**: cắm ESP32 vắt ngang rãnh giữa breadboard, mỗi hàng chân nằm một bên. ESP32 DevKit V1 khá rộng, nếu một bên chỉ còn 1 lỗ trống thì ghép 2 breadboard cạnh nhau, mỗi hàng chân ESP32 cắm lên một board.
+2. **LED + điện trở**: cắm điện trở 220Ω từ hàng của chân GPIO sang một hàng trống, cắm **chân dài (+)** của LED vào hàng đó, **chân ngắn (−)** sang hàng của chân GND phụ (hoặc nối dây M-M về chân đó). Không cần xoắn hay quấn băng dính.
+3. **GND phụ**: ESP32 chỉ có 2 chân GND, nên code đặt thêm một số GPIO ở mức `LOW` để làm GND riêng cho từng LED, nút nhấn và PIR. Cách này chỉ dùng cho tải dưới 20mA: LED khoảng 6mA, nút khoảng 0.07mA, PIR dưới 0.1mA. **Không** dùng cho relay hay còi (còi nối vào GND thật).
+4. **Thanh nguồn**: kéo chân **VIN** ra thanh `+` và chân **GND** ra thanh `−` của breadboard. Relay và PIR cùng lấy nguồn 5V từ thanh `+`, relay và còi lấy GND từ thanh `−`.
+5. **Nút nhấn**: cắm nút vắt ngang rãnh giữa (hoặc vào một vùng trống), dùng 2 chân **chéo nhau** nối tới GPIO và GND phụ.
 
 ### Sơ đồ chân (ESP32 DevKit V1 30 chân, mặt chip quay lên, USB quay xuống)
 
@@ -102,31 +105,22 @@ Nút LOCK chân 2 [GND phụ] ► D14  ┤              ├ D4   ◄ PIR GND [GN
                                  └────[USB]─────┘
 ```
 
-> Board 38 chân có thứ tự chân khác. Luôn cắm theo **nhãn in trên board**. Chân `D17` trên board còn ghi là `D17` (GPIO17), chân `D16` còn ghi là `D16` (GPIO16).
+> Board 38 chân có thứ tự chân khác. Luôn cắm theo **nhãn in trên board** (`D17` = GPIO17, `D16` = GPIO16).
 
 ### Bảng nối dây
 
 | Linh kiện | Chân linh kiện | Chân ESP32 | Dây |
 |---|---|---|---|
-| **Relay** | VCC · GND · IN1 · IN2 | VIN · GND · D26 · D27 | 4 × F-F |
-| **LED đỏ** | (+) qua 220Ω · (−) | D23 · D22 *(GND phụ)* | 2 × F-F |
-| **LED xanh** | (+) qua 220Ω · (−) | D18 · D19 *(GND phụ)* | 2 × F-F |
-| LED vàng | (+) qua 220Ω · (−) | D17 (D17) · D16 (D16) *(GND phụ)* | 2 × 1 đầu cái |
-| Nút EXIT | 2 chân chéo nhau | D32 · D33 *(GND phụ)* | 2 × 1 đầu cái |
-| Nút LOCK | 2 chân chéo nhau | D13 · D14 *(GND phụ)* | 2 × 1 đầu cái |
-| Còi buzzer | (+) · (−) | D25 · GND | 2 × F-F |
-| PIR | VCC · GND · OUT | VIN *(dây Y)* · D4 *(GND phụ)* · D35 | Y + 2 × F-F |
+| **Relay** | VCC · GND · IN1 · IN2 | VIN *(thanh +)* · GND *(thanh −)* · D26 · D27 | 4 × M-F |
+| **LED đỏ** | (+) qua 220Ω · (−) | D23 · D22 *(GND phụ)* | Cắm trên breadboard / M-M |
+| **LED xanh** | (+) qua 220Ω · (−) | D18 · D19 *(GND phụ)* | Cắm trên breadboard / M-M |
+| LED vàng | (+) qua 220Ω · (−) | D17 · D16 *(GND phụ)* | Cắm trên breadboard / M-M |
+| Nút EXIT | 2 chân chéo nhau | D32 · D33 *(GND phụ)* | Cắm trên breadboard / M-M |
+| Nút LOCK | 2 chân chéo nhau | D13 · D14 *(GND phụ)* | Cắm trên breadboard / M-M |
+| Còi buzzer | (+) · (−) | D25 · GND *(thanh −)* | Cắm trên breadboard / M-M |
+| PIR | VCC · GND · OUT | VIN *(thanh +)* · D4 *(GND phụ)* · D35 | 3 × M-F |
 
-### Kế hoạch dây
-
-| Phương án | Gồm | F-F | F-M (cắt) |
-|---|---|---|---|
-| **A. Cơ bản** (đủ đề bài) | Relay + LED đỏ + LED xanh | 8 | 0 |
-| A+ | A + LED vàng | 10 | 0 |
-| B. Thêm còi + nút | A + LED vàng + còi + 2 nút | 6 | 10 |
-| C. Đầy đủ | B + PIR | 9 (gồm 2 dây cắt làm dây Y) | 10 |
-
-Quy tắc: dây F-F để dành cho module có chân đực (Relay, còi, PIR), còn chân LED và chân nút dùng dây 1 đầu cái.
+Quy tắc: linh kiện có chân trần (LED, điện trở, nút, còi) cắm thẳng lên breadboard, nối bằng dây M-M. Module có chân đực (Relay, PIR) nối bằng dây M-F.
 
 ## 🪛 Cắm dây từng bước
 
@@ -134,17 +128,17 @@ Quy tắc: dây F-F để dành cho module có chân đực (Relay, còi, PIR), 
 
 | Bước | Việc làm | Kiểm tra |
 |---|---|---|
-| 0 | Đặt ESP32 mặt chip lên, USB quay về phía mình. Nạp code, mở web | Web hiện `LOCKED` |
-| 1 | **LED đỏ**: điện trở xoắn vào chân dài → D23, chân ngắn → D22 | LED đỏ sáng. Nhập sai PIN thì nháy 3 lần |
-| 2 | **LED xanh**: điện trở xoắn vào chân dài → D18, chân ngắn → D19 | Nhập `1234` thì LED xanh nháy rồi sáng, sau 5 giây tắt |
-| 3 | **Relay**: VCC → VIN, GND → GND, IN1 → D26, IN2 → D27 | Mở khóa thì relay 1 kêu "tách". Sai 3 lần thì relay 2 đóng 15 giây. **Đủ đề bài** 🎉 |
+| 0 | Cắm ESP32 lên breadboard, mặt chip lên, USB quay về phía mình. Nạp code, mở web | Web hiện `LOCKED` |
+| 1 | **LED đỏ**: D23 → điện trở 220Ω → chân dài, chân ngắn → D22 | LED đỏ sáng. Nhập sai PIN thì nháy 3 lần |
+| 2 | **LED xanh**: D18 → điện trở 220Ω → chân dài, chân ngắn → D19 | Nhập `1234` thì LED xanh nháy rồi sáng, sau 5 giây tắt |
+| 3 | **Relay**: VCC → thanh + (VIN), GND → thanh − (GND), IN1 → D26, IN2 → D27 | Mở khóa thì relay 1 kêu "tách". Sai 3 lần thì relay 2 đóng 15 giây. **Đủ đề bài** 🎉 |
 | 4 | *(tùy chọn)* **LED vàng**: D17 (+) / D16 (−) | Sáng khi có người hoặc trong lúc tạm khóa |
 | 5 | *(tùy chọn)* **Nút**: EXIT → D32 / D33, LOCK → D13 / D14 (chân chéo) | EXIT mở khóa. LOCK khóa và tắt báo động |
-| 6 | *(tùy chọn)* **Còi buzzer**: (+) → D25, (−) → GND | Nhập sai 3 lần thì còi kêu "bíp - bíp" trong lúc báo động |
-| 7 | *(tùy chọn)* **PIR**: VCC → VIN (dây Y), GND → D4, OUT → D35 | Chờ 60 giây, vẫy tay thì LED vàng sáng, web hiện "Có người". Đang khóa mà đứng lâu (quá `PIR_ALARM_DELAY_MS`) thì báo động |
-| 8 | Dán lên bìa carton, quấn băng dính mọi mối nối | Không có mối nối trần nào chạm nhau |
+| 6 | *(tùy chọn)* **Còi buzzer**: (+) → D25, (−) → thanh − (GND) | Nhập sai 3 lần thì còi kêu "bíp - bíp" trong lúc báo động |
+| 7 | *(tùy chọn)* **PIR**: VCC → thanh + (VIN), GND → D4, OUT → D35 | Chờ 60 giây, vẫy tay thì LED vàng sáng, web hiện "Có người". Đang khóa mà đứng lâu (quá `PIR_ALARM_DELAY_MS`) thì báo động |
+| 8 | Rà lại toàn bộ breadboard | Không có chân linh kiện nào cắm nhầm hàng hoặc chạm sang hàng bên cạnh |
 
-> ⚠️ Mọi mối xoắn phải quấn băng dính. Còi nối vào GND thật. Không cắm vào TX0/RX0/D12.
+> ⚠️ Các lỗ trong cùng một hàng 5 lỗ được nối thông với nhau, đừng cắm 2 chân của cùng một linh kiện vào cùng hàng. Còi nối vào GND thật. Không cắm vào TX0/RX0/D12.
 
 ## 🛠 Cài đặt & nạp code
 
@@ -177,6 +171,31 @@ Code đã được biên dịch thử với esp32 core **3.3.12**, không có c�
 | Báo động | **Nháy nhanh** | Tắt | **Nháy nhanh** | **Bíp - bíp** | Ngắt | **Đóng** | ! ALARM ! |
 
 **Tắt báo động:** nhập đúng PIN, bấm nút EXIT (mở cửa) hoặc nút LOCK, hoặc chờ báo động tự tắt sau 15 giây. Nút "Khóa ngay" trên web **không** tắt được báo động.
+
+## 👁 Cơ chế quét của PIR
+
+**Phần cứng (HC-SR501).** Cảm biến đo sự thay đổi tia hồng ngoại do thân nhiệt người di chuyển. Khi thấy chuyển động, chân OUT lên `HIGH` (3.3V) và giữ trong khoảng thời gian chỉnh bằng biến trở **Tx**, xong thì về `LOW`. Biến trở **Sx** chỉnh độ nhạy (tầm xa). Nếu người vẫn còn cử động trong lúc OUT đang `HIGH` thì cảm biến giữ `HIGH` tiếp (chế độ lặp lại, jumper ở vị trí H). Vừa cấp nguồn, PIR cần khoảng 30–60 giây để ổn định, trong lúc đó OUT có thể bật tắt lung tung.
+
+**Phần mềm.** `loop()` chạy liên tục và mỗi vòng gọi `readSensors()` một lần, tức là ESP32 đọc chân D35 hàng trăm lần mỗi giây (polling, không dùng ngắt):
+
+```
+đọc D35 ──► HIGH và lần trước chưa có người? ──► có: motionSince = bây giờ, ghi log "Phát hiện người trước cửa"
+        └─► motion = trạng thái vừa đọc (HIGH = có người, LOW = không có ai)
+
+nếu  motion  &&  cửa đang khóa  &&  chưa báo động  &&  không trong thời gian tạm khóa
+     &&  bây giờ − motionSince ≥ PIR_ALARM_DELAY_MS (8 giây)
+  ──► BÁO ĐỘNG 15 giây, motionSince = bây giờ
+```
+
+1. **Phát hiện người**: lúc OUT chuyển từ `LOW` sang `HIGH`, code ghi lại mốc thời gian `motionSince`. LED vàng sáng, web hiện "🚶 Có người" và "Mời nhập mã PIN...".
+2. **Đếm thời gian đứng**: miễn là OUT còn `HIGH` thì `motion` vẫn là `true` và thời gian tính từ `motionSince` cứ tăng lên. Chỉ cần OUT về `LOW` (người đi khỏi, hoặc hết thời gian Tx mà không còn cử động) là `motion = false`. Lần `HIGH` sau sẽ đếm lại từ 0.
+3. **Báo động**: cửa đang khóa mà OUT giữ `HIGH` liên tục đủ `PIR_ALARM_DELAY_MS` thì bật báo động: còi kêu, LED đỏ và LED vàng nháy nhanh, relay 2 đóng. Mốc `motionSince` được đặt lại tại thời điểm này.
+4. **Khi nào không báo động**: cửa đang mở, đang báo động, hoặc đang tạm khóa vì sai PIN. Lúc này PIR vẫn được đọc và vẫn hiện "Có người", chỉ không kích báo động.
+
+Hệ quả cần biết:
+- Báo động kéo dài 15 giây, lâu hơn 8 giây chờ. Vì vậy nếu sau khi báo động tắt người vẫn đứng đó (OUT vẫn `HIGH`) thì báo động bật lại ngay. Muốn dừng hẳn thì nhập đúng PIN hoặc bấm EXIT để mở cửa.
+- Thời gian OUT giữ `HIGH` (Tx) cũng được tính là "đang đứng". Vặn Tx quá lớn thì người chỉ đi ngang qua cũng có thể gây báo động. Nên vặn Tx hết ngược chiều kim đồng hồ (khoảng 3 giây).
+- Code không bỏ qua giai đoạn PIR khởi động, nên sau khi cấp nguồn hãy chờ khoảng 60 giây rồi mới thử.
 
 ## ⚙️ Cấu hình
 
@@ -253,8 +272,8 @@ Bản đầy đủ 15 kịch bản kiểm thử nằm trong file hướng dẫn 
 | Hiện tượng | Cách sửa |
 |---|---|
 | Máy tính không nhận cổng COM / ttyUSB | Dùng cáp USB có truyền dữ liệu, cài driver CP210x/CH340 |
-| LED không sáng | Kiểm tra chiều LED (chân dài nối phía điện trở), xoắn chặt mối nối, gập đôi chân linh kiện trước khi cắm, nạp lại code mới |
-| LED chập chờn khi chạm vào dây | Mối nối lỏng: xoắn lại, quấn băng dính, cố định dây |
+| LED không sáng | Kiểm tra chiều LED (chân dài nối phía điện trở), kiểm tra LED và điện trở có nằm đúng hàng breadboard, nạp lại code mới |
+| LED chập chờn khi chạm vào dây | Chân cắm lỏng: cắm sâu lại, đổi sang lỗ khác hoặc thay dây cắm |
 | Relay hoạt động ngược | `RELAY_ACTIVE_LOW = false` |
 | Relay không nhả | Rút jumper JD-VCC, nối JD-VCC với 5V và VCC với 3V3 |
 | Báo động liên tục (PIR) | Chưa lắp PIR nhưng `USE_PIR = true` làm chân D35 trôi nổi đọc ngẫu nhiên; hoặc PIR nhạy quá. Chưa lắp thì đặt `USE_PIR = false`, đã lắp thì chờ 60 giây và vặn Tx hết ngược chiều kim đồng hồ |
@@ -269,10 +288,10 @@ Bản đầy đủ 15 kịch bản kiểm thử nằm trong file hướng dẫn 
 - Dùng HTTP nên dữ liệu không được mã hóa.
 - PIN được lưu dạng chuỗi gốc trong flash.
 - Relay chỉ mô phỏng chốt khóa.
-- Mối nối xoắn tay kém bền hơn so với breadboard hoặc hàn.
+- Breadboard dễ lỏng chân khi di chuyển, kém bền hơn mạch hàn.
 
 **Hướng phát triển**
-- Chuyển sang breadboard hoặc hàn trên board đục lỗ.
+- Hàn lên board đục lỗ hoặc làm PCB để mạch chắc chắn hơn.
 - Gắn còi hoặc đèn chớp 5V vào relay kênh 2 để có âm thanh to hơn, không cần sửa code.
 - Băm PIN bằng SHA-256 có salt (`mbedtls`). Mã hóa đường truyền bằng HTTPS hoặc dùng MQTT qua TLS.
 - Chế độ STA để ESP32 vào WiFi nhà. Gửi thông báo Telegram khi có báo động. Mã OTP cho khách.

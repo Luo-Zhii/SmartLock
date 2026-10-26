@@ -80,7 +80,7 @@
 <header class="cover">
   <div class="tag">Đề tài IoT · ESP32</div>
   <h1>Khóa cửa thông minh kết hợp nhập mật khẩu (PIN Code) trên Web</h1>
-  <p>Hướng dẫn từ A đến Z, lắp <b>không cần breadboard</b>: linh kiện, kỹ thuật nối dây trực tiếp, cắm dây từng bước, cài đặt, nạp code, giải thích mã nguồn, bảo mật, kiểm thử.</p>
+  <p>Hướng dẫn từ A đến Z: linh kiện, kỹ thuật nối dây trực tiếp, cắm dây từng bước, cài đặt, nạp code, giải thích mã nguồn, bảo mật, kiểm thử.</p>
 </header>
 
 <nav class="toc">
@@ -89,7 +89,7 @@
     <li><a href="#gioi-thieu">Giới thiệu đề tài</a></li>
     <li><a href="#nguyen-ly">Nguyên lý hoạt động</a></li>
     <li><a href="#linh-kien">Linh kiện</a></li>
-    <li><a href="#ky-thuat">Kỹ thuật nối dây không breadboard</a></li>
+    <li><a href="#ky-thuat">Kỹ thuật nối dây</a></li>
     <li><a href="#so-do">Sơ đồ chân &amp; bảng nối dây</a></li>
     <li><a href="#phan-mem">Cài đặt phần mềm &amp; nạp code</a></li>
     <li><a href="#cam-day">Cắm dây từng bước</a></li>
@@ -108,7 +108,6 @@
 <p>Hệ thống dùng vi điều khiển <b>ESP32</b> làm Web Server. ESP32 tự phát WiFi riêng. Người dùng kết nối điện thoại vào WiFi này và mở trình duyệt để thấy <b>màn hình trạng thái</b> và <b>bàn phím số</b>. Khi nhập đúng mã PIN, ESP32 kích <b>Relay</b> (đóng vai trò chốt khóa điện) để mở khóa, và <b>LED xanh</b> sáng. Khi nhập sai, <b>LED đỏ</b> nháy. Nếu nhập sai nhiều lần hoặc có người đứng lâu trước cửa khi đang khóa, hệ thống <b>báo động</b> (còi kêu, đèn nháy, relay 2 bật).</p>
 <div class="note"><b>Điều chỉnh theo linh kiện thực tế:</b>
 <ul>
-  <li><b>Không có breadboard</b>: nối dây trực tiếp vào chân ESP32, và dùng kỹ thuật <b>"GND phụ"</b> (xem mục 4).</li>
   <li><b>Không có màn hình OLED</b>: màn hình được chuyển lên <b>Web</b>. Trang chính có một màn hình ảo, còn trang <code>/screen</code> hiển thị toàn màn hình để gắn điện thoại hoặc tablet cũ ở cửa.</li>
   <li><b>Còi buzzer</b>: kêu <b>"bíp - bíp"</b> khi báo động. Kèm theo LED đỏ + LED vàng nháy nhanh và relay kênh 2 bật.</li>
 </ul></div>
@@ -166,11 +165,11 @@
   <tr><td>Kéo, băng dính điện, bìa carton</td><td><span class="pill ok">dụng cụ</span></td><td>—</td><td>Cắt và tuốt dây, cách điện mối nối, gắn mô hình</td></tr>
   <tr><td>DHT11, quang trở, chiết áp, điện trở 1k/10k, dây M-M</td><td><span class="pill no">không dùng</span></td><td>—</td><td>Xem Hướng phát triển</td></tr>
 </table>
-<div class="tip"><b>Gợi ý:</b> chỉ cần phần <b>bắt buộc</b> (ESP32 + Relay + LED xanh + LED đỏ) là đã đủ yêu cầu đề bài, và <b>không phải cắt dây nào</b>. Các phần tùy chọn làm hệ thống "xịn" hơn nhưng phải cắt và nối dây thủ công. Nếu sau này có điều kiện, một breadboard mini 170 lỗ (rất rẻ) sẽ giúp bỏ được toàn bộ bước cắt dây.</div>
+<div class="tip"><b>Gợi ý:</b> chỉ cần phần <b>bắt buộc</b> (ESP32 + Relay + LED xanh + LED đỏ) là đã đủ yêu cầu đề bài, và <b>không phải cắt dây nào</b>. Các phần tùy chọn làm hệ thống "xịn" hơn nhưng phải cắt và nối dây thủ công.</div>
 
 <!-- 4 -->
-<h2 id="ky-thuat">4. Kỹ thuật nối dây không breadboard</h2>
-<p>Không có breadboard thì gặp 3 vấn đề, và đây là cách giải quyết từng cái:</p>
+<h2 id="ky-thuat">4. Kỹ thuật nối dây</h2>
+<p>Khi nối dây có 3 điểm cần lưu ý, và đây là cách xử lý từng cái:</p>
 <table>
   <tr><th>Vấn đề</th><th>Cách giải quyết</th></tr>
   <tr><td>ESP32 chỉ có <b>2 chân GND</b>, trong khi rất nhiều thứ cần nối GND</td><td><b>GND phụ</b>: dùng một GPIO đặt mức LOW làm GND (mục 4.1)</td></tr>
@@ -192,7 +191,7 @@ for (int pin : GND_PINS) { pinMode(pin, OUTPUT); digitalWrite(pin, LOW); }</code
 </table>
 <div class="warn"><b>⚠️ Bắt buộc phải nạp code mới trước.</b> Chân GND phụ chỉ là GND khi code đã đặt nó về LOW. Nếu board đang chạy code cũ, LED chỉ không sáng chứ không hỏng gì.</div>
 
-<h3>4.2 Nối LED + điện trở không cần breadboard</h3>
+<h3>4.2 Nối LED + điện trở</h3>
 <figure>
 <svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Arial,sans-serif" font-size="13">
   <rect x="30" y="30" width="110" height="160" rx="10" fill="#1f3b73"/>
@@ -673,7 +672,7 @@ json += ",\"msg\":\"" + (msgActive ? screenMsg : "") + "\"";</code></pre>
   <li>PIN được lưu dạng chuỗi gốc trong flash.</li>
   <li>Bộ đếm số lần sai bị xóa khi khởi động lại.</li>
   <li>Relay chỉ mô phỏng chốt khóa.</li>
-  <li>Các mối nối xoắn tay kém bền hơn so với hàn hoặc cắm trên breadboard.</li>
+  <li>Các mối nối kém bền hơn so với hàn cố định.</li>
 </ul></div>
 
 <!-- 11 -->
@@ -718,7 +717,6 @@ json += ",\"msg\":\"" + (msgActive ? screenMsg : "") + "\"";</code></pre>
 <!-- 13 -->
 <h2 id="phat-trien">13. Hướng phát triển</h2>
 <ul>
-  <li><b>Breadboard / hàn mạch:</b> chuyển sang breadboard hoặc hàn trên board đục lỗ để mạch bền hơn.</li>
   <li><b>Âm thanh to hơn:</b> gắn còi hoặc đèn chớp 5V vào relay kênh 2 (COM2 → 5V, NO2 → còi (+), còi (−) → GND). Không cần sửa code.</li>
   <li><b>Tận dụng linh kiện còn lại:</b> hiển thị nhiệt độ/độ ẩm (DHT11) trên màn hình web; dùng chiết áp để chỉnh thời gian tự khóa.</li>
   <li><b>Chế độ STA:</b> cho ESP32 vào WiFi nhà bằng <code>WiFi.begin(ssid, pass)</code>.</li>
